@@ -1,8 +1,6 @@
 package cloud.igoldenbeta.hippo.client;
 
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,22 +38,30 @@ public class HippoProxy {
         });
   }
 
-  @SuppressWarnings("unchecked")
-  public Object apiRequest(String serviceHost, String serviceMethod, Object parameter) throws Throwable {
-      String[] serviceMethods = serviceMethod.split("/");
-      Object[] objects = new Object[1];
-      objects[0] = parameter;
+  /**
+   * api request
+   * 
+   * @param serviceHost
+   * @param serviceMethod
+   * @param parameter
+   * @return
+   * @throws Throwable
+   */
+  public Object apiRequest(String serviceHost, String serviceMethod, Object parameter)
+      throws Throwable {
+    String[] serviceMethods = serviceMethod.split("/");
+    Object[] objects = new Object[1];
+    objects[0] = parameter;
 
-      HippoRequest request = new HippoRequest();
-      request.setRequestId(UUID.randomUUID().toString());
-      request.setRequestType(1);
-      request.setClassName(serviceMethods[0]);
-      request.setMethodName(serviceMethods[1]);
-      request.setParameterTypes(null);
-      request.setParameters(objects);
+    HippoRequest request = new HippoRequest();
+    request.setRequestId(UUID.randomUUID().toString());
+    request.setRequestType(1);
+    request.setClassName(serviceMethods[0]);
+    request.setMethodName(serviceMethods[1]);
+    request.setParameterTypes(null);
+    request.setParameters(objects);
 
-      Object o = zmqRpcClient.callService(request, serviceHost);
-      return o;
+    return zmqRpcClient.callService(request, serviceHost);
   }
 
 }

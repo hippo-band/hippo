@@ -99,7 +99,7 @@ public class ZmqRpcWorkerProcess {
     throw new NoSuchMethodException(paras.getMethodName());
   }
 
-  private static boolean isBaseDataType(Class clazz)  throws Exception
+  private static boolean isBaseDataType(@SuppressWarnings("rawtypes") Class clazz)  throws Exception
   {
     return
             (

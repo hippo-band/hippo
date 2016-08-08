@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>cloud.igoldenbeta.hippo</groupId>
+	<groupId>cloud.igoldenbeta</groupId>
 	<artifactId>hippo-client</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -17,41 +17,69 @@
 		<zmq.version>0.3.4</zmq.version>
 		<apache-commons-lang3.version>3.1</apache-commons-lang3.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
 
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${apache-commons-lang3.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.zeromq</groupId>
+				<artifactId>jeromq</artifactId>
+				<version>${zmq.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j-version}</version>
+				<scope>compile</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>cloud.igoldenbeta</groupId>
+				<artifactId>hippo-common</artifactId>
+				<version>${hippo-common-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>3.8.1</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>${apache-commons-lang3.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.zeromq</groupId>
 			<artifactId>jeromq</artifactId>
-			<version>${zmq.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j-version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>cloud.igoldenbeta.hippo</groupId>
+			<groupId>cloud.igoldenbeta</groupId>
 			<artifactId>hippo-common</artifactId>
-			<version>${hippo-common-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
 	<distributionManagement>
 		<repository>
 			<id>nexus-releases</id>
