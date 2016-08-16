@@ -9,6 +9,18 @@
 		<java.version>1.8</java.version>
 		<hippo-common-version>0.0.2-SNAPSHOT</hippo-common-version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>hippo-repo-mvn-repo</id>
+			<url>https://github.com/hippo-band/hippo-repo/master</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -42,6 +54,8 @@
 			<artifactId>eureka-client</artifactId>
 		</dependency>
 	</dependencies>
+
+	<!--deploy to private nexus -->
 	<distributionManagement>
 		<repository>
 			<id>nexus-releases</id>
@@ -54,6 +68,18 @@
 			<url>http://dev.igoldenbeta.com/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
+	<!--deploy to local file & push to github -->
+	<!--<distributionManagement>-->
+	<!--<repository>-->
+	<!--<id>releases</id>-->
+	<!--<url>file:///Users/hanruofei/Documents/code_github/hippo/hippo-repo</url>-->
+	<!--</repository>-->
+	<!--<snapshotRepository>-->
+	<!--<id>snapshots</id>-->
+	<!--<url>file:///Users/hanruofei/Documents/code_github/hippo/hippo-repo/snapshots</url>-->
+	<!--</snapshotRepository>-->
+	<!--</distributionManagement>-->
+
 	<build>
 		<plugins>
 			<plugin>
