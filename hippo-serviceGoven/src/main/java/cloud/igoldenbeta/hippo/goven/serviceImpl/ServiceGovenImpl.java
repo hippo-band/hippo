@@ -1,17 +1,15 @@
 package cloud.igoldenbeta.hippo.goven.serviceImpl;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.netflix.appinfo.ApplicationInfoManager;
@@ -31,13 +29,34 @@ public class ServiceGovenImpl implements ServiceGovern {
 	@Autowired
 	private EurekaGovernatedBaseService baseService;
 
+	@Value("${erueka.ipAddress:localhost}")
+	private String ipAddress;
+	@Value("${eureka.serviceUrls}")
+	private String serviceUrl;
+	@Value("${eureka.port:8761}")
+	private int eurekaPort;
+	@Value("${eureka.instance.preferIpAddress:true}")
+	private boolean preferIpAddress;
+	@Value("${eureka.instance.leaseRenewalIntervalInSeconds:30}")
+	private int leaseRenewalIntervalInSeconds;
+	@Value("${eureka.instance.leaseExpirationDurationInSeconds:90}")
+	private int leaseExpirationDurationInSeconds;
+	@Value("${eureka.client.registerWithEureka:true}")
+	private boolean registerWithEureka;
+	@Value("${eureka.client.preferSameZoneEureka:true}")
+	private boolean preferSameZoneEureka;
+	@Value("$eureka.client.region:us-east-1")
+	private String region;
+	@Value("${eureka.client.zone:defaultZone}")
+	private String zone;
+
 	@Override
 	public String getServiceAddress(String arg0) {
 		DiscoveryClient discoveryClient = baseService.getDiscoveryClient();
 		if (discoveryClient == null) {
-			register("eureka");
+			discoveryClient = getClient();
+			baseService.setConfiguration(discoveryClient);
 		}
-		discoveryClient = baseService.getDiscoveryClient();
 		try {
 			InstanceInfo instanceInfo = discoveryClient.getNextServerFromEureka(arg0, false);
 			if (instanceInfo != null) {
@@ -47,63 +66,76 @@ public class ServiceGovenImpl implements ServiceGovern {
 			logger.error("can not get an instance of service from euraka server", e);
 			throw e;
 		}
-		return "127.0.0.1:7050";
+		String defaultAddress = "";
+		try {
+			defaultAddress = InetAddress.getLocalHost().getHostAddress() + ":8761";
+		} catch (UnknownHostException e) {
+			logger.error("return default address", e);
+		}
+		return defaultAddress;
+	}
+
+	private DiscoveryClient getClient() {
+		EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
+		EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
+		eureClientConfigBean.setRegisterWithEureka(false);
+		eureClientConfigBean.setPreferSameZoneEureka(true);
+		Map<String, String> zones = new HashMap<>();
+		Map<String, String> serviceUrls = new HashMap<>();
+		zones.put(eureClientConfigBean.getRegion(), EurekaClientConfigBean.DEFAULT_ZONE);
+		serviceUrls.put(EurekaClientConfigBean.DEFAULT_ZONE,
+				StringUtils.isBlank(serviceUrl) ? EurekaClientConfigBean.DEFAULT_URL : serviceUrl);
+		eureClientConfigBean.setAvailabilityZones(zones);
+		eureClientConfigBean.setServiceUrl(serviceUrls);
+		DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
+		return DiscoveryManager.getInstance().getDiscoveryClient();
 	}
 
 	@Override
 	public int register(String arg0) {
-		Properties properties = new Properties();
+		DiscoveryManager.getInstance().shutdownComponent();
+		logger.info("------------正在注册------------" + arg0);
 		EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
 		EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
-		InputStream in = null;
-		try {
-			  File file = new File(ServiceGovenImpl.class.getResource("/database.properties").getPath());
-			  if(file.exists())
-				  in = new FileInputStream(file);
-			  else
-			      in = new FileInputStream("conf/database.properties");
-			  
-			  properties.load(in);
-			  String host = System.getenv("HOST");
-			  String port = System.getenv("PORT");
-			  if(StringUtils.isNotBlank(host)) {
-				  eureInstanceConfigBean.setIpAddress(host.trim());
-			  }else {
-				  eureInstanceConfigBean.setIpAddress("127.0.0.1");
-			  }
-			  if(StringUtils.isNotBlank(port)) {
-				  eureInstanceConfigBean.setNonSecurePort(Integer.parseInt(port.trim()));
-			  }else {
-				  eureInstanceConfigBean.setNonSecurePort(7050);
-			  }
-			  eureInstanceConfigBean.setAppname(arg0==null?"eureka":arg0);
-			  eureInstanceConfigBean.setPreferIpAddress(true);
-			  eureInstanceConfigBean.setVirtualHostName(eureInstanceConfigBean.getAppname());
-			  eureClientConfigBean.setRegisterWithEureka(true);
-			  eureClientConfigBean.setPreferSameZoneEureka(true);
-			  Map<String,String> zones = new HashMap<>();
-			  Map<String,String> serviceUrls = new HashMap<>();
-			  zones.put(eureClientConfigBean.getRegion(), EurekaClientConfigBean.DEFAULT_ZONE);
-			  serviceUrls.put(EurekaClientConfigBean.DEFAULT_ZONE,
-						properties.getProperty("eureka.serviceUrls") == null ? EurekaClientConfigBean.DEFAULT_URL
-								: properties.getProperty("eureka.serviceUrls"));
-			  eureClientConfigBean.setAvailabilityZones(zones);
-			  eureClientConfigBean.setServiceUrl(serviceUrls);
-			  DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
-			  ApplicationInfoManager.getInstance().setInstanceStatus(InstanceStatus.UP);
-			  baseService.setConfiguration(DiscoveryManager.getInstance().getDiscoveryClient());
-		}catch(Exception e) {
-			  logger.error("error to get service port",e);
-		}finally{
-			if(in != null) {
+		String host = System.getenv("HOST");
+		String port = System.getenv("PORT");
+		if (StringUtils.isNotBlank(host)) {
+			eureInstanceConfigBean.setIpAddress(host.trim());
+		} else {
+			if (!ipAddress.equals("localhost")) {
+				eureInstanceConfigBean.setIpAddress(ipAddress);
+			} else {
 				try {
-					in.close();
-				} catch (IOException e) {
-					logger.error("error to close inpustream",e);
+					eureInstanceConfigBean.setIpAddress(InetAddress.getLocalHost().getHostAddress());
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
 				}
 			}
 		}
+		if (StringUtils.isNotBlank(port)) {
+			eureInstanceConfigBean.setNonSecurePort(Integer.parseInt(port.trim()));
+		} else {
+			if (eurekaPort != 0) {
+				eureInstanceConfigBean.setNonSecurePort(eurekaPort);
+			} else {
+				eureInstanceConfigBean.setNonSecurePort(7050);
+			}
+		}
+		eureInstanceConfigBean.setAppname(arg0 == null ? "eureka" : arg0);
+		eureInstanceConfigBean.setPreferIpAddress(preferIpAddress);
+		eureInstanceConfigBean.setVirtualHostName(eureInstanceConfigBean.getAppname());
+		eureClientConfigBean.setRegisterWithEureka(registerWithEureka);
+		eureClientConfigBean.setPreferSameZoneEureka(preferSameZoneEureka);
+		Map<String, String> zones = new HashMap<>();
+		Map<String, String> serviceUrls = new HashMap<>();
+		zones.put(region, zone);
+		serviceUrls.put(zone, serviceUrl);
+		eureClientConfigBean.setAvailabilityZones(zones);
+		eureClientConfigBean.setServiceUrl(serviceUrls);
+		ApplicationInfoManager.getInstance().initComponent(eureInstanceConfigBean);
+		DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
+		ApplicationInfoManager.getInstance().setInstanceStatus(InstanceStatus.UP);
+		baseService.setConfiguration(DiscoveryManager.getInstance().getDiscoveryClient());
 		return eureInstanceConfigBean.getNonSecurePort();
 	}
-
 }
