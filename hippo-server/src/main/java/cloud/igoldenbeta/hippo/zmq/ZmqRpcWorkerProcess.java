@@ -93,6 +93,8 @@ public class ZmqRpcWorkerProcess {
       if (responseDto != null){//拿到返回
         if(isBaseDataType(responseDto.getClass())) return responseDto;
           else return GsonConvertUtils.cleanseToObject(responseDto);
+      }else {
+        return null;
       }
     }
 
