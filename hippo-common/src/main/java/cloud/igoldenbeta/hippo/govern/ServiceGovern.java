@@ -10,7 +10,7 @@ public interface ServiceGovern {
   /**
    * 服务注册
    * 
-   * @param serviceName
+   * @param serviceName 注册服务名
    * @return 注册时的端口号
    */
   public int register(String serviceName);
@@ -20,7 +20,7 @@ public interface ServiceGovern {
    * 127.0.0.1:7070
    * 
    * @param serviceName 注册服务名
-   * @return
+   * @return ip:port
    */
   public String getServiceAddress(String serviceName);
 

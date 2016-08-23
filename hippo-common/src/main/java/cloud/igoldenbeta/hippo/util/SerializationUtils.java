@@ -25,7 +25,12 @@ public class SerializationUtils {
 
   private SerializationUtils() {}
 
-  @SuppressWarnings("unchecked")
+  /**
+   *
+   * @param cls class
+   * @param <T> dto
+   * @return Schema
+     */
   private static <T> Schema<T> getSchema(Class<T> cls) {
     Schema<T> schema = (Schema<T>) cachedSchema.get(cls);
     if (schema == null) {
@@ -40,10 +45,9 @@ public class SerializationUtils {
   /**
    * 序列化
    * 
-   * @param obj
-   * @return
+   * @param obj object
+   * @return byte
    */
-  @SuppressWarnings("unchecked")
   public static <T> byte[] serialize(T obj) {
     Class<T> cls = (Class<T>) obj.getClass();
     LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
@@ -60,9 +64,9 @@ public class SerializationUtils {
   /**
    * 反序列化
    * 
-   * @param data
-   * @param cls
-   * @return
+   * @param data byte
+   * @param cls class
+   * @return obj
    */
   public static <T> T deserialize(byte[] data, Class<T> cls) {
     try {

@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 @Component
 public @interface HippoService {
   /**
-   * 服务注册时的名字
+   *
    * 
-   * @return
+   * @return 服务注册时的名字
    */
   String serviceName();
 }

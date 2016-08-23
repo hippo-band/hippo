@@ -10,9 +10,13 @@ public class GsonConvertUtils {
 
     private static Gson gson = new Gson();
 
-	/**
-	 * 把json字符串转成java对象
-	 */
+    /**
+     * 把json字符串转成java对象
+     * @param json json
+     * @param objectClass class
+     * @param <T> dto
+     * @return java obj
+     */
 	public static<T> T toObject(String json, Class<T> objectClass) {
 		if(StringUtils.isEmpty(json)) return null;
 
@@ -27,6 +31,8 @@ public class GsonConvertUtils {
 
     /**
      * 把json字符串转成LinkedTreeMap对象
+     * @param json json
+     * @return LinkedTreeMap
      */
     public static Object toObject(String json) {
         if(StringUtils.isEmpty(json)) return null;
@@ -40,9 +46,10 @@ public class GsonConvertUtils {
     }
 
     /**
-     * 把json字符串转成List<LinkedTreeMap>对象
+     * 把json字符串转成List LinkedTreeMap 对象
+     * @param json json
+     * @return List LinkedTreeMap
      */
-	@SuppressWarnings("rawtypes")
   public static List<LinkedTreeMap> toMapList(String json) {
 		if(StringUtils.isEmpty(json)) return null;
 
@@ -57,10 +64,11 @@ public class GsonConvertUtils {
 
     /**
      * 把对象转成json字符串
+     * @param obj obj
+     * @return json str
      */
     public static String toJson(Object obj) {
         if (obj == null) return null;
-
         try {
             return gson.toJson(obj);
         } catch (Exception e) {
@@ -69,8 +77,11 @@ public class GsonConvertUtils {
     }
 
 
-    /** hippo-server used
+    /**
+     * hippo-server used
      * 清洗对象格式
+     * @param obj javaObj
+     * @return obj
      */
     public static Object cleanseToObject(Object obj) {
         if (obj == null) return null;
@@ -81,8 +92,14 @@ public class GsonConvertUtils {
             throw new ClassCastException("obj cleanse");
         }
     }
-    /** hippo-server used
+
+    /**
+     * hippo-server used
      * 获取到json转为T
+     * @param obj obj
+     * @param objectClass class
+     * @param <T> dto
+     * @return request obj
      */
     public static<T> T cleanseToObjectClass(Object obj, Class<T> objectClass) {
         if(obj == null) return null;
