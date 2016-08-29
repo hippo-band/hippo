@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.bean;
+package com.github.hippo.bean;
 
 import java.io.Serializable;
 
@@ -14,11 +14,11 @@ public class HippoResponse implements Serializable {
   /**
    * 
    */
-  private static final long serialVersionUID = -3924875427337306692L;
+  private static final long serialVersionUID = -2553246569725890161L;
   private String requestId;
   private Object result;
   private Throwable throwable;
-  private boolean isError=false;//default
+  private boolean isError = false;// default if true result is HippoRequest for trace request param
 
   public String getRequestId() {
     return requestId;

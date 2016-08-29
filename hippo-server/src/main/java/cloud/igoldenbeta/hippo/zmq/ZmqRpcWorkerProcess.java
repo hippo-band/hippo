@@ -1,6 +1,5 @@
 package cloud.igoldenbeta.hippo.zmq;
 
-import cloud.igoldenbeta.hippo.util.GsonConvertUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,10 +8,14 @@ import org.springframework.cglib.reflect.FastMethod;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
-import cloud.igoldenbeta.hippo.bean.HippoRequest;
-import cloud.igoldenbeta.hippo.bean.HippoResponse;
+
+import com.github.hippo.bean.HippoRequest;
+import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.util.GsonConvertUtils;
+import com.github.hippo.util.SerializationUtils;
+
 import cloud.igoldenbeta.hippo.server.HippoServiceImplCache;
-import cloud.igoldenbeta.hippo.util.SerializationUtils;
+
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;

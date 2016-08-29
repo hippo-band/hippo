@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.github.hippo.govern.ServiceGovern;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.InstanceStatus;
@@ -21,7 +22,6 @@ import com.netflix.discovery.DiscoveryManager;
 import cloud.igoldenbeta.hippo.goven.eureka.EurekaClientConfigBean;
 import cloud.igoldenbeta.hippo.goven.eureka.EurekaGovernatedBaseService;
 import cloud.igoldenbeta.hippo.goven.eureka.EurekaInstanceConfigBean;
-import cloud.igoldenbeta.hippo.govern.ServiceGovern;
 
 @Component
 public class ServiceGovenImpl implements ServiceGovern {

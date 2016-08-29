@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import cloud.igoldenbeta.hippo.annotation.HippoClient;
+import com.github.hippo.annotation.HippoClient;
 
 /**
  * 初始化有@RpcConsumer注解的类

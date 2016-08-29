@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.zeromq.ZMQ;
 
-import cloud.igoldenbeta.hippo.bean.HippoRequest;
-import cloud.igoldenbeta.hippo.bean.HippoResponse;
-import cloud.igoldenbeta.hippo.govern.ServiceGovern;
-import cloud.igoldenbeta.hippo.util.SerializationUtils;
+import com.github.hippo.bean.HippoRequest;
+import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.util.SerializationUtils;
 
 /**
  * 客户端

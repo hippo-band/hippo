@@ -13,9 +13,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import cloud.igoldenbeta.hippo.annotation.HippoService;
-import cloud.igoldenbeta.hippo.annotation.HippoServiceImpl;
-import cloud.igoldenbeta.hippo.govern.ServiceGovern;
+import com.github.hippo.annotation.HippoService;
+import com.github.hippo.annotation.HippoServiceImpl;
+import com.github.hippo.govern.ServiceGovern;
+
 import cloud.igoldenbeta.hippo.zmq.ZmqRpcWorkerListener;
 
 /**

@@ -6,8 +6,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import cloud.igoldenbeta.hippo.annotation.HippoService;
-import cloud.igoldenbeta.hippo.bean.HippoRequest;
+import com.github.hippo.annotation.HippoService;
+import com.github.hippo.bean.HippoRequest;
+
 import cloud.igoldenbeta.hippo.zmq.ZmqRpcClient;
 
 /**

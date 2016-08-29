@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.govern;
+package com.github.hippo.govern;
 
 /**
  * 服务管理

@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.bean;
+package com.github.hippo.bean;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -11,12 +11,13 @@ import java.util.Arrays;
  *
  */
 public class HippoRequest implements Serializable {
+
   /**
    * 
    */
-  private static final long serialVersionUID = 1011251787575609560L;
+  private static final long serialVersionUID = 8703973176164750873L;
   private String requestId;
-  private Integer requestType = 0; //0:内部rpc调用 1:apigate调用
+  private Integer requestType = 0; // 0:内部rpc调用 1:apigate调用
   private String className;
   private String methodName;
   private Class<?>[] parameterTypes;
@@ -72,13 +73,9 @@ public class HippoRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "HippoRequest{" +
-            "requestId='" + requestId + '\'' +
-            ", requestType=" + requestType +
-            ", className='" + className + '\'' +
-            ", methodName='" + methodName + '\'' +
-            ", parameterTypes=" + Arrays.toString(parameterTypes) +
-            ", parameters=" + Arrays.toString(parameters) +
-            '}';
+    return "HippoRequest{" + "requestId='" + requestId + '\'' + ", requestType=" + requestType
+        + ", className='" + className + '\'' + ", methodName='" + methodName + '\''
+        + ", parameterTypes=" + Arrays.toString(parameterTypes) + ", parameters="
+        + Arrays.toString(parameters) + '}';
   }
 }

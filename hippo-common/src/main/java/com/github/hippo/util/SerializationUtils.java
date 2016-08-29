@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.util;
+package com.github.hippo.util;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,8 +48,7 @@ public class SerializationUtils {
     Class<T> cls = (Class<T>) obj.getClass();
     LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
     try {
-      Schema<T> schema = getSchema(cls);
-      return ProtostuffIOUtil.toByteArray(obj, schema, buffer);
+      return ProtostuffIOUtil.toByteArray(obj, getSchema(cls), buffer);
     } catch (Exception e) {
       throw new IllegalStateException(e.getMessage(), e);
     } finally {
@@ -67,8 +66,7 @@ public class SerializationUtils {
   public static <T> T deserialize(byte[] data, Class<T> cls) {
     try {
       T message = objenesis.newInstance(cls);
-      Schema<T> schema = getSchema(cls);
-      ProtostuffIOUtil.mergeFrom(data, message, schema);
+      ProtostuffIOUtil.mergeFrom(data, message, getSchema(cls));
       return message;
     } catch (Exception e) {
       throw new IllegalStateException(e.getMessage(), e);

@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.annotation;
+package com.github.hippo.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 /**
- * 声明在实现类上,interfaceClass传接口class
+ * 声明在接口上 如果有多个接口需要提供SOA服务,serviceName必须一样
  * 
  * @author sl
  *
@@ -16,10 +16,11 @@ import org.springframework.stereotype.Component;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Component
-public @interface HippoServiceImpl {
+public @interface HippoService {
   /**
-   * 接口类class
+   * 服务注册时的名字
+   * 
    * @return
    */
-  Class<? extends Object> value();
+  String serviceName();
 }
