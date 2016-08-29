@@ -1,45 +1,67 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>cloud.igoldenbeta</groupId>
+	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-serviceGoven</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.1</version>
+	<packaging>jar</packaging>
+
+
+	<name>${project.groupId}:${project.artifactId}</name>
+	<description>service govern impl of hippo rpc framework</description>
+	<url>https://github.com/hippo-band/hippo.git</url>
+
 
 	<properties>
 		<java.version>1.8</java.version>
-		<hippo-common-version>0.0.2-SNAPSHOT</hippo-common-version>
+		<hippo-common-version>0.0.2</hippo-common-version>
+		<eureka-version>1.1.147</eureka-version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>hippo-repo-mvn-repo</id>
-			<url>https://github.com/hippo-band/hippo-repo/master</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<tag>master</tag>
+		<url>https://github.com/hippo-band/hippo</url>
+		<connection>scm:git:https://github.com/hippo-band/hippo.git</connection>
+		<developerConnection>scm:git:https://github.com/hippo-band/hippo.git</developerConnection>
+	</scm>
+	<developers>
+		<developer>
+			<name>hippo</name>
+			<email>hippo_band@163.com</email>
+			<organization>hippo</organization>
+		</developer>
+	</developers>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>com.github.hippo-band</groupId>
+				<artifactId>hippo-common</artifactId>
+				<version>${hippo-common-version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.netflix.eureka</groupId>
 				<artifactId>eureka-core</artifactId>
-				<version>1.1.147</version>
+				<version>${eureka-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.netflix.eureka</groupId>
 				<artifactId>eureka-client</artifactId>
-				<version>1.1.147</version>
+				<version>${eureka-version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
 		<dependency>
-			<groupId>cloud.igoldenbeta</groupId>
+			<groupId>com.github.hippo-band</groupId>
 			<artifactId>hippo-common</artifactId>
-			<version>${hippo-common-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.netflix.eureka</groupId>
@@ -51,60 +73,78 @@
 		</dependency>
 	</dependencies>
 
-	<!--deploy to private nexus -->
-	<!--<distributionManagement>-->
-		<!--<repository>-->
-			<!--<id>nexus-releases</id>-->
-			<!--<name>Nexus Release Repository</name>-->
-			<!--<url>http://dev.igoldenbeta.com/nexus/content/repositories/releases</url>-->
-		<!--</repository>-->
-		<!--<snapshotRepository>-->
-			<!--<id>nexus-snapshots</id>-->
-			<!--<name>Nexus Snapshot Repository</name>-->
-			<!--<url>http://dev.igoldenbeta.com/nexus/content/repositories/snapshots</url>-->
-		<!--</snapshotRepository>-->
-	<!--</distributionManagement>-->
-	<!--deploy to local file & push to github -->
-	<distributionManagement>
-	<repository>
-	<id>releases</id>
-	<url>file:///Users/hanruofei/Documents/code_github/hippo/hippo-repo</url>
-	</repository>
-	<snapshotRepository>
-	<id>snapshots</id>
-	<url>file:///Users/hanruofei/Documents/code_github/hippo/hippo-repo/snapshots</url>
-	</snapshotRepository>
-	</distributionManagement>
+	<profiles>
+		<profile>
+			<id>release</id>
+
+			<distributionManagement>
+				<snapshotRepository>
+					<id>oss</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+				<repository>
+					<id>oss</id>
+					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<compilerArgument>-Xlint:all</compilerArgument>
 					<showWarnings>true</showWarnings>
 					<showDeprecation>true</showDeprecation>
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1</version>
-				<configuration>
-					<attach>true</attach>
-				</configuration>
+				<version>2.2.1</version>
 				<executions>
 					<execution>
-						<phase>compile</phase>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
 						<goals>
 							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- GPG -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
-		<defaultGoal>compile</defaultGoal>
 	</build>
 </project>
