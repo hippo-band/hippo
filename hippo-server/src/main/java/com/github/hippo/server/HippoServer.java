@@ -1,10 +1,12 @@
-package cloud.igoldenbeta.hippo.server;
+package com.github.hippo.server;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +17,24 @@ import org.springframework.stereotype.Component;
 
 import com.github.hippo.annotation.HippoService;
 import com.github.hippo.annotation.HippoServiceImpl;
+import com.github.hippo.bean.HippoDecoder;
+import com.github.hippo.bean.HippoEncoder;
+import com.github.hippo.bean.HippoRequest;
+import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.netty.HippoHandler;
 
-import cloud.igoldenbeta.hippo.zmq.ZmqRpcWorkerListener;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 /**
- * 服务注册以及启动zmq
+ * 服务注册以及启动netty server
  * 
  * @author sl
  *
@@ -28,7 +42,7 @@ import cloud.igoldenbeta.hippo.zmq.ZmqRpcWorkerListener;
 @Component
 @Order
 public class HippoServer implements ApplicationContextAware, InitializingBean {
-
+  private static final Logger LOG = LoggerFactory.getLogger(HippoServer.class);
   @Autowired
   private ServiceGovern serviceGovern;
 
@@ -49,7 +63,6 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
             registryNames.add(annotation.serviceName());
           }
         }
-
       }
     }
   }
@@ -60,9 +73,29 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
     if (registryNames.size() > 1) {
       throw new IllegalAccessError("多个HippoService的serviceName必须一样[" + registryNames + "]");
     }
-    // 服务注册
-    int port = serviceGovern.register(registryNames.iterator().next());
-    // 起zmq服务
-    new Thread(new ZmqRpcWorkerListener(port)).start();
+    new Thread(() -> {
+      int port = serviceGovern.register(registryNames.iterator().next());
+      EventLoopGroup bossGroup = new NioEventLoopGroup();
+      EventLoopGroup workerGroup = new NioEventLoopGroup();
+      try {
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+            .childHandler(new ChannelInitializer<SocketChannel>() {
+              @Override
+              public void initChannel(SocketChannel channel) throws Exception {
+                channel.pipeline().addLast(new HippoDecoder(HippoRequest.class))
+                    .addLast(new HippoEncoder(HippoResponse.class)).addLast(new HippoHandler());
+              }
+            }).option(ChannelOption.SO_BACKLOG, 2048).childOption(ChannelOption.SO_KEEPALIVE, true);
+
+        ChannelFuture future = bootstrap.bind(port).sync();
+        future.channel().closeFuture().sync();
+      } catch (Exception e) {
+        LOG.error("hippoServer error", e);
+      } finally {
+        workerGroup.shutdownGracefully();
+        bossGroup.shutdownGracefully();
+      }
+    }).start();
   }
 }
