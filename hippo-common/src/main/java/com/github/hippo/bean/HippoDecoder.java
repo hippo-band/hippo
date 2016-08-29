@@ -7,14 +7,21 @@ import com.github.hippo.util.SerializationUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-
+/**
+ * netty msg decoder
+ * @author sl
+ *
+ */
 public class HippoDecoder extends ByteToMessageDecoder {
   private Class<?> genericClass;
 
+  /**
+   * @param genericClass genericClass
+   */
   public HippoDecoder(Class<?> genericClass) {
     this.genericClass = genericClass;
   }
-
+  
   @Override
   public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
     if (in.readableBytes() < 4) {

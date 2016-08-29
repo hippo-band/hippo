@@ -25,6 +25,13 @@ public class SerializationUtils {
 
   private SerializationUtils() {}
 
+  /**
+   * getSchema
+   * 
+   * @param cls origin class
+   * @param <T> 泛型
+   * @return Schema
+   */
   @SuppressWarnings("unchecked")
   private static <T> Schema<T> getSchema(Class<T> cls) {
     Schema<T> schema = (Schema<T>) cachedSchema.get(cls);
@@ -40,8 +47,9 @@ public class SerializationUtils {
   /**
    * 序列化
    * 
-   * @param obj
-   * @return
+   * @param obj obj
+   * @param <T> 泛型
+   * @return data[]
    */
   @SuppressWarnings("unchecked")
   public static <T> byte[] serialize(T obj) {
@@ -59,9 +67,9 @@ public class SerializationUtils {
   /**
    * 反序列化
    * 
-   * @param data
-   * @param cls
-   * @return
+   * @param data origin data
+   * @param cls obj
+   * @return cls.instance
    */
   public static <T> T deserialize(byte[] data, Class<T> cls) {
     try {

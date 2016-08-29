@@ -12,12 +12,23 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * gson 操作类
+ * 
+ * @author sl
+ *
+ */
 public class GsonConvertUtils {
 
   private static final Gson gson = new Gson();
 
   /**
    * 把json字符串转成java对象
+   * 
+   * @param json json string
+   * @param objectClass obj class
+   * @param <T> 泛型
+   * @return objectClass instance
    */
   public static <T> T toObject(String json, Class<T> objectClass) {
     if (StringUtils.isEmpty(json)) return null;
@@ -30,6 +41,9 @@ public class GsonConvertUtils {
 
   /**
    * 把json字符串转成LinkedTreeMap对象
+   * 
+   * @param json json string
+   * @return obj(LinkedTreeMap)
    */
   public static Object toObject(String json) {
     if (StringUtils.isEmpty(json)) return null;
@@ -42,7 +56,10 @@ public class GsonConvertUtils {
   }
 
   /**
-   * 把json字符串转成List<LinkedTreeMap>对象
+   * 把json字符串转成ListLinkedTreeMap对象
+   * 
+   * @param json json string
+   * @return List LinkedTreeMap
    */
   @SuppressWarnings("rawtypes")
   public static List<LinkedTreeMap> toMapList(String json) {
@@ -58,6 +75,9 @@ public class GsonConvertUtils {
 
   /**
    * 把对象转成json字符串
+   * 
+   * @param obj origin obj
+   * @return json
    */
   public static String toJson(Object obj) {
     if (obj == null) return null;
@@ -72,12 +92,17 @@ public class GsonConvertUtils {
 
   /**
    * hippo-server used 清洗对象格式
+   * 
+   * @param obj origin obj
+   * @return obj
    */
   public static Object cleanseToObject(Object obj) {
     if (obj == null) return null;
     try {
-      if (isBaseDataType(obj.getClass())) return obj;
-      else return gson.fromJson(gson.toJson(obj), Object.class);
+      if (isBaseDataType(obj.getClass()))
+        return obj;
+      else
+        return gson.fromJson(gson.toJson(obj), Object.class);
     } catch (Exception e) {
       throw new ClassCastException("obj cleanse:" + ToStringBuilder.reflectionToString(obj));
     }
@@ -85,6 +110,11 @@ public class GsonConvertUtils {
 
   /**
    * hippo-server used 获取到json转为T
+   * 
+   * @param obj origin obj
+   * @param objectClass objectClass
+   * @param <T> 泛型
+   * @return objectClass.instance
    */
   public static <T> T cleanseToObjectClass(Object obj, Class<T> objectClass) {
     if (obj == null) return null;
@@ -102,15 +132,16 @@ public class GsonConvertUtils {
 
   /**
    * 判断是否是基础类型
+   * 
    * @param clazz
-   * @return
-     */
+   * @return true/false
+   */
   private static boolean isBaseDataType(@SuppressWarnings("rawtypes") Class clazz) {
     return (clazz.equals(String.class) || clazz.equals(Integer.class) || clazz.equals(Byte.class)
-            || clazz.equals(Long.class) || clazz.equals(Double.class) || clazz.equals(Float.class)
-            || clazz.equals(Character.class) || clazz.equals(Short.class)
-            || clazz.equals(BigDecimal.class) || clazz.equals(BigInteger.class)
-            || clazz.equals(Boolean.class) || clazz.equals(Date.class) || clazz.isPrimitive());
+        || clazz.equals(Long.class) || clazz.equals(Double.class) || clazz.equals(Float.class)
+        || clazz.equals(Character.class) || clazz.equals(Short.class)
+        || clazz.equals(BigDecimal.class) || clazz.equals(BigInteger.class)
+        || clazz.equals(Boolean.class) || clazz.equals(Date.class) || clazz.isPrimitive());
   }
 
 }

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public @interface HippoServiceImpl {
   /**
    * 接口类class
-   * @return
+   * @return 接口class
    */
   Class<? extends Object> value();
 }
