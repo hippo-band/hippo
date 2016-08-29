@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.client;
+package com.github.hippo.client;
 
 import java.lang.reflect.Proxy;
 import java.util.UUID;
@@ -8,8 +8,9 @@ import org.springframework.stereotype.Component;
 
 import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
-
-import cloud.igoldenbeta.hippo.zmq.ZmqRpcClient;
+import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.netty.HippoNettyClient;
 
 /**
  * client代理类
@@ -21,7 +22,7 @@ import cloud.igoldenbeta.hippo.zmq.ZmqRpcClient;
 public class HippoProxy {
 
   @Autowired
-  private ZmqRpcClient zmqRpcClient;
+  private ServiceGovern serviceGovern;
 
   @SuppressWarnings("unchecked")
   <T> T create(Class<?> inferfaceClass) {
@@ -34,9 +35,20 @@ public class HippoProxy {
           request.setMethodName(method.getName());
           request.setParameterTypes(method.getParameterTypes());
           request.setParameters(args);
-          return zmqRpcClient.callService(request,
-              inferfaceClass.getAnnotation(HippoService.class).serviceName());
+          return getHippoResponse(inferfaceClass.getAnnotation(HippoService.class).serviceName(),
+              request);
         });
+  }
+
+  private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
+    String serviceAddress = serviceGovern.getServiceAddress(serviceName);
+    String[] split = serviceAddress.split(":");
+    HippoNettyClient hippoNettyClient = new HippoNettyClient(split[0], Integer.parseInt(split[1]));
+    HippoResponse rsp = hippoNettyClient.send(request);
+    if (rsp.isError()) {
+      throw rsp.getThrowable();
+    }
+    return rsp.getResult();
   }
 
   /**
@@ -53,7 +65,6 @@ public class HippoProxy {
     String[] serviceMethods = serviceMethod.split("/");
     Object[] objects = new Object[1];
     objects[0] = parameter;
-
     HippoRequest request = new HippoRequest();
     request.setRequestId(UUID.randomUUID().toString());
     request.setRequestType(1);
@@ -61,8 +72,6 @@ public class HippoProxy {
     request.setMethodName(serviceMethods[1]);
     request.setParameterTypes(null);
     request.setParameters(objects);
-
-    return zmqRpcClient.callService(request, serviceHost);
+    return getHippoResponse(serviceHost, request);
   }
-
 }

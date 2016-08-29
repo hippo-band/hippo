@@ -1,4 +1,4 @@
-package cloud.igoldenbeta.hippo.client;
+package com.github.hippo.client;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
