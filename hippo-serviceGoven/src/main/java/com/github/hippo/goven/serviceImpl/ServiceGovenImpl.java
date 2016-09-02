@@ -50,7 +50,7 @@ public class ServiceGovenImpl implements ServiceGovern {
   private boolean registerWithEureka;
   @Value("${eureka.client.preferSameZoneEureka:true}")
   private boolean preferSameZoneEureka;
-  @Value("$eureka.client.region:us-east-1")
+  @Value("${eureka.client.region:us-east-1}")
   private String region;
   @Value("${eureka.client.zone:defaultZone}")
   private String zone;

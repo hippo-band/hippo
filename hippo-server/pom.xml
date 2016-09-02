@@ -8,13 +8,13 @@
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
-	<description>common of hippo rpc framework</description>
+	<description>server of hippo rpc framework</description>
 	<url>https://github.com/hippo-band/hippo.git</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<commons-beanutils-version>1.9.2</commons-beanutils-version>
-		<hippo-common-version>0.0.2</hippo-common-version>
+		<hippo-common-version>0.0.1</hippo-common-version>
 	</properties>
 
 	<licenses>

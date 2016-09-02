@@ -74,6 +74,11 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
       throw new IllegalAccessError("多个HippoService的serviceName必须一样[" + registryNames + "]");
     }
     new Thread(() -> {
+      try {
+        Thread.sleep(1);
+      } catch (Exception e1) {
+        e1.printStackTrace();
+      }
       int port = serviceGovern.register(registryNames.iterator().next());
       EventLoopGroup bossGroup = new NioEventLoopGroup();
       EventLoopGroup workerGroup = new NioEventLoopGroup();
