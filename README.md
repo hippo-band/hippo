@@ -49,17 +49,6 @@
 
 ###hippo-serviceGoven
 
-    使用eureka作为服务治理,包括服务注册,服务发现,集群管理等.用户可以直接依赖这个POM实现服务治理,也可以不依赖这个POM而自己实现服务治理
-    如需自己实现服务治理要实现hippo-common里的ServiceGovern接口
-    <dependency>
-        <groupId>com.github.hippo-band</groupId>
-        <artifactId>hippo-serviceGoven</artifactId>
-        <version>0.0.1</version>
-    </dependency>
-    详情:http:///
-
-###hippo-serviceGoven
-
     使用eureka作为服务治理,包括服务注册,服务发现,集群管理等.用户可以直接依赖这个POM实现服务治理,也可以不依赖这个POM而自己实现服务治理.
     如需自己实现服务治理要实现hippo-common里的ServiceGovern接口
     使用我们提供的服务发现需在hippo-client和hippo-server同时在引入hippo-serviceGoven pom.同时配套使用我们还提供了eureka的服务端cheris https://github.com/hippo-band/cheris
