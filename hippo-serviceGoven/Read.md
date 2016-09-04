@@ -1,8 +1,8 @@
-#hippo-serviceGoven
+#hippo-serviceGoven 
 
 #简介
     hippo-serviceGoven 是整个hippo RPC框架的默认提供的服务治理实现框架，当然你也可以使用自己的服务治理框架，默认实现的服务治理框架
-  是以Eureka框架为基础的，经过修改而成，用户无无须任何繁琐的配置就可以直接使用，当然你也可以通过被框架提供的属性，进行自己的需求配置。
+    是以Eureka框架为基础的，经过修改而成，用户无无须任何繁琐的配置就可以直接使用，当然你也可以通过被框架提供的属性，进行自己的需求配置。
   
 #配置
     hippo-serviceGoven 的属性都有默认的值，用户大可不必去配置文件里修改属性，但鉴于用户自己的需求变化，框架还是提供了一些必要的属性选择
@@ -30,4 +30,4 @@
     注意：这些属性全部都是通过spring @Value属性注入的
     
 #使用
-  hippo-serviceGoven是hippo RPC 默认的实现框架，具体的使用规则，请前往https://github.com/hippo-band/hippo
+    hippo-serviceGoven是hippo RPC 默认的实现框架，具体的使用规则，请前往https://github.com/hippo-band/hippo
