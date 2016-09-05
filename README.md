@@ -57,6 +57,6 @@
         <artifactId>hippo-serviceGoven</artifactId>
         <version>0.0.1</version>
     </dependency>
-    ###详情:[https://github.com/hippo-band/hippo/tree/master/hippo-serviceGoven]
+    [详情](https://github.com/hippo-band/hippo/tree/master/hippo-serviceGoven)
 
 
