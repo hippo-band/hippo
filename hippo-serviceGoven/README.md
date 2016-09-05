@@ -30,4 +30,4 @@
     注意：这些属性全部都是通过spring @Value属性注入的
     
 #使用
-    hippo-serviceGoven是hippo RPC 默认的实现框架，具体的使用规则，请前往https://github.com/hippo-band/hippo
+    hippo-serviceGoven是hippo RPC 服务注册 服务发现 默认的实现，具体的使用规则，请前往https://github.com/hippo-band/hippo
