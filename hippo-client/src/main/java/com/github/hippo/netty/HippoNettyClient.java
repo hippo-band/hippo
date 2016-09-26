@@ -20,6 +20,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 
 /**
  * hippo netty client
@@ -34,18 +36,25 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
 
   private String host;
   private int port;
+  private int hippoReadTimeout;
+  private int hippoWriteTimeout;
+  private boolean needTimeout;
 
   private HippoResponse response;
 
-  public HippoNettyClient(String host, int port) {
+  public HippoNettyClient(String host, int port, int hippoReadTimeout, int hippoWriteTimeout,
+      boolean needTimeout) {
     this.host = host;
     this.port = port;
+    this.hippoReadTimeout = hippoReadTimeout;
+    this.hippoWriteTimeout = hippoWriteTimeout;
+    this.needTimeout = needTimeout;
   }
 
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-    LOGGER.error("netty client error", cause);
+    LOGGER.error("netty client error", cause.fillInStackTrace());
     ctx.close();
   }
 
@@ -58,7 +67,7 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
    */
   public HippoResponse send(HippoRequest request) throws Exception {
     Bootstrap bootstrap = new Bootstrap();
-    NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
+    NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     try {
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);
@@ -68,6 +77,16 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
         @Override
         public void initChannel(SocketChannel channel) throws Exception {
           ChannelPipeline pipeline = channel.pipeline();
+          if (needTimeout) {
+            if (hippoReadTimeout <= 0) {
+              hippoReadTimeout = 3;// default
+            }
+            if (hippoWriteTimeout <= 0) {
+              hippoWriteTimeout = 1;// default
+            }
+            pipeline.addLast(new ReadTimeoutHandler(hippoReadTimeout));
+            pipeline.addLast(new WriteTimeoutHandler(hippoWriteTimeout));
+          }
           pipeline.addLast(new HippoEncoder(HippoRequest.class));
           pipeline.addLast(new HippoDecoder(HippoResponse.class));
           pipeline.addLast(HippoNettyClient.this);

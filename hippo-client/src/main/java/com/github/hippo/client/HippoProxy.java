@@ -4,6 +4,7 @@ import java.lang.reflect.Proxy;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.github.hippo.annotation.HippoService;
@@ -24,6 +25,13 @@ public class HippoProxy {
   @Autowired
   private ServiceGovern serviceGovern;
 
+  @Value("${hippo.read.timeout:3}")
+  private int hippoReadTimeout;
+  @Value("${hippo.write.timeout:1}")
+  private int hippoWriteTimeout;
+  @Value("${hippo.needTimeout:false}")
+  private boolean needTimeout;
+
   @SuppressWarnings("unchecked")
   <T> T create(Class<?> inferfaceClass) {
     return (T) Proxy.newProxyInstance(inferfaceClass.getClassLoader(),
@@ -43,7 +51,8 @@ public class HippoProxy {
   private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
     String serviceAddress = serviceGovern.getServiceAddress(serviceName);
     String[] split = serviceAddress.split(":");
-    HippoNettyClient hippoNettyClient = new HippoNettyClient(split[0], Integer.parseInt(split[1]));
+    HippoNettyClient hippoNettyClient = new HippoNettyClient(split[0], Integer.parseInt(split[1]),
+        hippoReadTimeout, hippoWriteTimeout, needTimeout);
     HippoResponse rsp = hippoNettyClient.send(request);
     if (rsp.isError()) {
       throw rsp.getThrowable();

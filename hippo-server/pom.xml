@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github.hippo-band</groupId>
-	<artifactId>hippo-server</artifactId>
+	<artifactId>hippo-server-with-eureka</artifactId>
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
@@ -15,6 +15,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<commons-beanutils-version>1.9.2</commons-beanutils-version>
 		<hippo-common-version>0.0.1</hippo-common-version>
+		<hippo-serviceGoven-version>0.0.1</hippo-serviceGoven-version>
 	</properties>
 
 	<licenses>
@@ -47,6 +48,11 @@
 				<version>${hippo-common-version}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.github.hippo-band</groupId>
+				<artifactId>hippo-serviceGoven</artifactId>
+				<version>${hippo-serviceGoven-version}</version>
+			</dependency>
+			<dependency>
 				<groupId>commons-beanutils</groupId>
 				<artifactId>commons-beanutils</artifactId>
 				<version>${commons-beanutils-version}</version>
@@ -61,6 +67,10 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.github.hippo-band</groupId>
+			<artifactId>hippo-serviceGoven</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.github.hippo-band</groupId>
 			<artifactId>hippo-common</artifactId>
