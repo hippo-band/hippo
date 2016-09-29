@@ -17,6 +17,7 @@ import com.github.hippo.util.GsonConvertUtils;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelHandler.Sharable;
 
 /**
  * netty handler处理类
@@ -24,9 +25,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * @author sl
  *
  */
-public class HippoHandler extends SimpleChannelInboundHandler<HippoRequest> {
+@Sharable
+public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HippoHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(HippoServerHandler.class);
 
   private Object handle(HippoRequest request) {
     HippoResponse response = new HippoResponse();
@@ -56,7 +58,7 @@ public class HippoHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    LOGGER.error("netty server error", cause);
+    LOGGER.error("netty server error", cause.fillInStackTrace());
     ctx.close();
   }
 

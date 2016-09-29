@@ -22,7 +22,7 @@ import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.govern.ServiceGovern;
-import com.github.hippo.netty.HippoHandler;
+import com.github.hippo.netty.HippoServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -89,7 +89,7 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
               @Override
               public void initChannel(SocketChannel channel) throws Exception {
                 channel.pipeline().addLast(new HippoDecoder(HippoRequest.class))
-                    .addLast(new HippoEncoder(HippoResponse.class)).addLast(new HippoHandler());
+                    .addLast(new HippoEncoder(HippoResponse.class)).addLast(new HippoServerHandler());
               }
             }).option(ChannelOption.SO_BACKLOG, 2048).childOption(ChannelOption.SO_KEEPALIVE, true);
 

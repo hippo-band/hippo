@@ -20,8 +20,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 
 /**
  * hippo netty client
@@ -37,24 +37,26 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
   private String host;
   private int port;
   private int hippoReadTimeout;
-  private int hippoWriteTimeout;
   private boolean needTimeout;
 
   private HippoResponse response;
 
-  public HippoNettyClient(String host, int port, int hippoReadTimeout, int hippoWriteTimeout,
-      boolean needTimeout) {
+  public HippoNettyClient(String host, int port, int hippoReadTimeout, boolean needTimeout) {
     this.host = host;
     this.port = port;
     this.hippoReadTimeout = hippoReadTimeout;
-    this.hippoWriteTimeout = hippoWriteTimeout;
     this.needTimeout = needTimeout;
   }
 
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-    LOGGER.error("netty client error", cause.fillInStackTrace());
+    LOGGER.error("netty client error", cause);
+    if (cause instanceof ReadTimeoutException) {
+      this.response = new HippoResponse();
+      this.response.setError(true);
+      this.response.setThrowable(cause);
+    }
     ctx.close();
   }
 
@@ -81,11 +83,7 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
             if (hippoReadTimeout <= 0) {
               hippoReadTimeout = 3;// default
             }
-            if (hippoWriteTimeout <= 0) {
-              hippoWriteTimeout = 1;// default
-            }
             pipeline.addLast(new ReadTimeoutHandler(hippoReadTimeout));
-            pipeline.addLast(new WriteTimeoutHandler(hippoWriteTimeout));
           }
           pipeline.addLast(new HippoEncoder(HippoRequest.class));
           pipeline.addLast(new HippoDecoder(HippoResponse.class));
