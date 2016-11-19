@@ -24,15 +24,17 @@ import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
- * hippo netty client
+ * hippo netty client 短链接方式
  * 
  * @author sl
  *
  */
+@Deprecated
 @Sharable
 public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HippoNettyClient.class);
+
 
   private String host;
   private int port;
@@ -69,7 +71,7 @@ public class HippoNettyClient extends SimpleChannelInboundHandler<HippoResponse>
    */
   public HippoResponse send(HippoRequest request) throws Exception {
     Bootstrap bootstrap = new Bootstrap();
-    NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
     try {
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);

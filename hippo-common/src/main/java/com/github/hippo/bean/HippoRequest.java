@@ -3,6 +3,8 @@ package com.github.hippo.bean;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import com.github.hippo.enums.HippoRequestEnum;
+
 
 /**
  * 请求包装类
@@ -16,12 +18,22 @@ public class HippoRequest implements Serializable {
    * 
    */
   private static final long serialVersionUID = 8703973176164750873L;
+  private String clientId;
   private String requestId;
-  private Integer requestType = 0; // 0:内部rpc调用 1:apigate调用
+  private Integer requestType = HippoRequestEnum.RPC.getType();// default
   private String className;
   private String methodName;
   private Class<?>[] parameterTypes;
   private Object[] parameters;
+
+
+  public String getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
+  }
 
   public String getRequestId() {
     return requestId;

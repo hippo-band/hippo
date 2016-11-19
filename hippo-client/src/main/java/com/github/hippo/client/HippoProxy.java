@@ -11,7 +11,7 @@ import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.govern.ServiceGovern;
-import com.github.hippo.netty.HippoNettyClient;
+import com.github.hippo.netty.HippoClientBootstrap;
 
 /**
  * client代理类
@@ -47,15 +47,14 @@ public class HippoProxy {
   }
 
   private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
-    String serviceAddress = serviceGovern.getServiceAddress(serviceName);
-    String[] split = serviceAddress.split(":");
-    HippoNettyClient hippoNettyClient =
-        new HippoNettyClient(split[0], Integer.parseInt(split[1]), hippoReadTimeout, needTimeout);
-    HippoResponse rsp = hippoNettyClient.send(request);
-    if (rsp.isError()) {
-      throw rsp.getThrowable();
+    HippoClientBootstrap hippoClientBootstrap =
+        new HippoClientBootstrap(serviceName, hippoReadTimeout, needTimeout, serviceGovern);
+    hippoClientBootstrap.sendAsync(request);
+    HippoResponse resp = hippoClientBootstrap.getResult(request.getRequestId());
+    if (resp.isError()) {
+      throw resp.getThrowable();
     }
-    return rsp.getResult();
+    return resp.getResult();
   }
 
   /**
