@@ -47,8 +47,8 @@ public class HippoProxy {
   }
 
   private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
-    HippoClientBootstrap hippoClientBootstrap =
-        new HippoClientBootstrap(serviceName, hippoReadTimeout, needTimeout, serviceGovern);
+    HippoClientBootstrap hippoClientBootstrap = HippoClientBootstrap.getBootstrap(serviceName,
+        hippoReadTimeout, needTimeout, serviceGovern);
     hippoClientBootstrap.sendAsync(request);
     HippoResponse resp = hippoClientBootstrap.getResult(request.getRequestId());
     if (resp.isError()) {

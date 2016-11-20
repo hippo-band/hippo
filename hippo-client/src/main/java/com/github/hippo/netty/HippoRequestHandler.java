@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.client.HippoClientChannelMap;
 import com.github.hippo.enums.HippoRequestEnum;
 
 import io.netty.channel.Channel;
@@ -25,7 +24,8 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   private volatile ConcurrentHashMap<String, HippoResponse> responseMap = new ConcurrentHashMap<>();
   private String cliendId;
   private EventLoopGroup eventLoopGroup;
-  private volatile boolean isReadComplete;
+  private volatile boolean isInActive;
+  private Channel channel;
 
   public HippoRequestHandler(String cliendId, EventLoopGroup eventLoopGroup) {
     this.cliendId = cliendId;
@@ -33,7 +33,14 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   }
 
   public HippoResponse getResponse(String requestId) {
-    return responseMap.get(requestId);
+    return responseMap.remove(requestId);
+  }
+
+
+  @Override
+  public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+    super.channelRegistered(ctx);
+    this.channel = ctx.channel();
   }
 
   @Override
@@ -53,8 +60,12 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   @Override
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
     this.response = response;
+    System.out.println(response.getRequestId() + ">>>" + response.getResult());
+    // ping不需要记录到返回结果MAP里
+    if (response != null && !("-99").equals(response.getRequestId())) {
+      responseMap.put(response.getRequestId(), response);
+    }
   }
-
 
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
@@ -67,7 +78,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
         hippoRequest.setRequestType(HippoRequestEnum.PING.getType());
         ctx.writeAndFlush(hippoRequest);
       } else if (e.state() == IdleState.READER_IDLE) {
-        // 可以计数
+        // 可以计数,超时可以放到具体的某个线程
         throw ReadTimeoutException.INSTANCE;
       }
     }
@@ -79,23 +90,18 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     super.channelInactive(ctx);
-    Channel remove = HippoClientChannelMap.remove(cliendId);
-    if (remove != null) {
-      remove.close();
-    }
+    ctx.close();
     if (eventLoopGroup != null) {
       eventLoopGroup.shutdownGracefully();
     }
+    isInActive = true;
   }
 
-  @Override
-  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-    super.channelReadComplete(ctx);
-    isReadComplete = true;
-    responseMap.put(response.getRequestId(), response);
+  public boolean isInActive() {
+    return isInActive;
   }
 
-  public boolean isReadComplete() {
-    return isReadComplete;
+  public void sendAsync(HippoRequest request) {
+    this.channel.writeAndFlush(request);
   }
 }
