@@ -76,11 +76,7 @@ public class HippoClientBootstrap {
       bootstrap.handler(new ChannelInitializer<SocketChannel>() {
         @Override
         public void initChannel(SocketChannel channel) throws Exception {
-          int readTimeout = 0;
-          if (needTimeout) {
-            readTimeout = hippoReadTimeout;
-          }
-          channel.pipeline().addLast(new IdleStateHandler(readTimeout, 30, 0, TimeUnit.SECONDS))
+          channel.pipeline().addLast(new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS))
               .addLast(new HippoEncoder(HippoRequest.class))
               .addLast(new HippoDecoder(HippoResponse.class)).addLast(handler);
         }

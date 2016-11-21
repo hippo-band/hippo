@@ -17,12 +17,12 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
 
   private volatile ConcurrentHashMap<String, HippoResultCallBack> callBackMap =
       new ConcurrentHashMap<>();
-  private String cliendId;
+  private String clientId;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
 
-  public HippoRequestHandler(String cliendId, EventLoopGroup eventLoopGroup) {
-    this.cliendId = cliendId;
+  public HippoRequestHandler(String clientId, EventLoopGroup eventLoopGroup) {
+    this.clientId = clientId;
     this.eventLoopGroup = eventLoopGroup;
   }
 
@@ -58,7 +58,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       IdleStateEvent e = (IdleStateEvent) evt;
       if (e.state() == IdleState.WRITER_IDLE) {
         HippoRequest hippoRequest = new HippoRequest();
-        hippoRequest.setClientId(cliendId);
+        hippoRequest.setClientId(clientId);
         hippoRequest.setRequestId("-99");
         hippoRequest.setRequestType(HippoRequestEnum.PING.getType());
         ctx.writeAndFlush(hippoRequest);
@@ -84,6 +84,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       c.signal(response);
     });
     callBackMap.clear();
+    HippoClientBootstrapMap.remove(clientId);
   }
 
   public void sendAsync(HippoResultCallBack hippoResultCallBack) {
