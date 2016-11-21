@@ -12,6 +12,7 @@ import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.netty.HippoClientBootstrap;
+import com.github.hippo.netty.HippoResultCallBack;
 
 /**
  * client代理类
@@ -49,12 +50,12 @@ public class HippoProxy {
   private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
     HippoClientBootstrap hippoClientBootstrap = HippoClientBootstrap.getBootstrap(serviceName,
         hippoReadTimeout, needTimeout, serviceGovern);
-    hippoClientBootstrap.sendAsync(request);
-    HippoResponse resp = hippoClientBootstrap.getResult(request.getRequestId());
-    if (resp.isError()) {
-      throw resp.getThrowable();
+    HippoResultCallBack callback = hippoClientBootstrap.sendAsync(request);
+    HippoResponse result = callback.getResult();
+    if (result.isError()) {
+      throw result.getThrowable();
     }
-    return resp.getResult();
+    return result.getResult();
   }
 
   /**

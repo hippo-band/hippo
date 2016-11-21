@@ -89,9 +89,10 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
               @Override
               public void initChannel(SocketChannel channel) throws Exception {
                 channel.pipeline().addLast(new HippoDecoder(HippoRequest.class))
-                    .addLast(new HippoEncoder(HippoResponse.class)).addLast(new HippoServerHandler());
+                    .addLast(new HippoEncoder(HippoResponse.class))
+                    .addLast(new HippoServerHandler());
               }
-            }).option(ChannelOption.SO_BACKLOG, 2048).childOption(ChannelOption.SO_KEEPALIVE, true);
+            }).option(ChannelOption.SO_BACKLOG, 128).option(ChannelOption.TCP_NODELAY, true);
 
         ChannelFuture future = bootstrap.bind(port).sync();
         future.channel().closeFuture().sync();

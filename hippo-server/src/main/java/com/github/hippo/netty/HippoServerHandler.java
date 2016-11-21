@@ -2,7 +2,10 @@ package com.github.hippo.netty;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,10 +17,10 @@ import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.server.HippoServiceImplCache;
 import com.github.hippo.util.GsonConvertUtils;
 
-import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.socket.SocketChannel;
 
 /**
  * netty handler处理类
@@ -29,17 +32,27 @@ import io.netty.channel.ChannelHandler.Sharable;
 public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HippoServerHandler.class);
+  private static final ExecutorService pool = Executors.newCachedThreadPool();
 
-  private Object handle(HippoRequest request) {
+  private void handle(ChannelHandlerContext ctx, HippoRequest request) {
+    String clientId = request.getClientId();
+    if (StringUtils.isNotBlank(clientId) && !HippoChannelMap.containsKey(clientId)) {
+      HippoChannelMap.put(clientId, (SocketChannel) ctx.channel());
+    }
     HippoResponse response = new HippoResponse();
     try {
       response.setRequestId(request.getRequestId());
+
       if (request.getRequestType() == 0) {
         response.setResult(rpcProcess(request));
       } else if (request.getRequestType() == 1) {
         response.setResult(apiProcess(request));
+      } else if (request.getRequestType() == 2) {
+        response.setResult("ping success");
+        response.setRequestId("-99");
       } else {
-        throw new IllegalAccessException("HippoRequest requestType err");
+        response.setError(true);
+        response.setThrowable(new IllegalAccessException("HippoRequest requestType err"));
       }
     } catch (Exception e1) {
       if (e1 instanceof InvocationTargetException) {
@@ -53,13 +66,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       LOGGER.error("process error: request:" + ToStringBuilder.reflectionToString(request)
           + "&respose:" + ToStringBuilder.reflectionToString(response), e1);
     }
-    return response;
-  }
-
-  @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    LOGGER.error("netty server error", cause.fillInStackTrace());
-    ctx.close();
+    HippoChannelMap.get(clientId).writeAndFlush(response);
   }
 
   private Object rpcProcess(HippoRequest paras) throws InvocationTargetException {
@@ -97,7 +104,20 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   }
 
   @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    LOGGER.error("netty server error", cause.fillInStackTrace());
+    ctx.close();
+  }
+
+
+  @Override
   protected void channelRead0(ChannelHandlerContext ctx, HippoRequest request) throws Exception {
-    ctx.writeAndFlush(handle(request)).addListener(ChannelFutureListener.CLOSE);
+    pool.submit(() -> handle(ctx, request));
+  }
+
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    super.channelInactive(ctx);
+    HippoChannelMap.remove((SocketChannel) ctx.channel());
   }
 }

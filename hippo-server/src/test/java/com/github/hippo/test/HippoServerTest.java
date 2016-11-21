@@ -1,10 +1,9 @@
-package com.github.hippo.server;
+package com.github.hippo.test;
 
 import com.github.hippo.bean.HippoDecoder;
 import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.netty.HippoServerHandlerTest;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

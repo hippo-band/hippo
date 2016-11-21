@@ -1,9 +1,7 @@
-package com.github.hippo.client;
+package com.github.hippo.netty;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.github.hippo.netty.HippoClientBootstrap;
 
 /**
  * 

@@ -1,5 +1,7 @@
-package com.github.hippo.netty;
+package com.github.hippo.test;
 
+import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -10,6 +12,8 @@ import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.netty.HippoRequestHandler;
+import com.github.hippo.netty.HippoResultCallBack;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -94,10 +98,12 @@ public class HippoClientBootstrap {
 
 
   private void initHostAndPort() {
-    String serviceAddress = serviceGovern.getServiceAddress(clientId);
-    String[] split = serviceAddress.split(":");
-    this.host = split[0];
-    this.port = Integer.parseInt(split[1]);
+    // String serviceAddress = serviceGovern.getServiceAddress(clientId);
+    // String[] split = serviceAddress.split(":");
+    // this.host = split[0];
+    // this.port = Integer.parseInt(split[1]);
+    this.host = "127.0.0.1";
+    this.port = 8888;
   }
 
   public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {
@@ -105,5 +111,56 @@ public class HippoClientBootstrap {
         new HippoResultCallBack(request, needTimeout, hippoReadTimeout);
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
+  }
+
+
+  public static void main(String[] args) throws Exception {
+    HippoClientBootstrap bootstrap =
+        HippoClientBootstrap.getBootstrap("testClient111", 1, true, null);
+
+    for (int i = 0; i < 3; i++) {
+      new Thread(() -> {
+        HippoRequest request = new HippoRequest();
+        request.setClientId("testClient111");
+        String requestId = "12345-" + new Random().nextInt(1000);
+        request.setRequestId(requestId);
+        try {
+
+          HippoResultCallBack sendAsync = bootstrap.sendAsync(request);
+          System.out.println(
+              new Date().toLocaleString() + ">>111>>>" + sendAsync.getResult().getResult());
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }).start();
+
+    }
+
+    HippoClientBootstrap bootstrap2 =
+        HippoClientBootstrap.getBootstrap("testClient222", 1, false, null);
+
+    for (int i = 0; i < 3; i++) {
+      new Thread(() -> {
+        HippoRequest request = new HippoRequest();
+        request.setClientId("testClient222");
+        String requestId = "abcde-" + new Random().nextInt(1000);
+        request.setRequestId(requestId);
+        try {
+          HippoResultCallBack sendAsync = bootstrap2.sendAsync(request);
+          System.out.println(
+              new Date().toLocaleString() + ">>222>>>" + sendAsync.getResult().getResult());
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }).start();
+
+    }
+    // HippoClientBootstrap bootstrap2 = new HippoClientBootstrap("testClient222", 3, false, null);
+    // for (int i = 0; i < 3; i++) {
+    // HippoRequest request = new HippoRequest();
+    // request.setClientId("testClient222");
+    // request.setRequestId("abcde-" + i);
+    // bootstrap2.sendAsync(request);
+    // }
   }
 }
