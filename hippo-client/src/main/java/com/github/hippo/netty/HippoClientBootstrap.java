@@ -1,6 +1,7 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +38,13 @@ public class HippoClientBootstrap {
 
   private Bootstrap bootstrap = new Bootstrap();
   private NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
-  // private Channel channel;
   private HippoRequestHandler handler;
-
   private ServiceGovern serviceGovern;
+
+  // 记录这个channel读超时的次数,默认超过6次就断掉连接等待重连
+  private AtomicInteger readTimeoutTimes = new AtomicInteger(0);
+
+
 
   public static HippoClientBootstrap getBootstrap(String clientId, int hippoReadTimeout,
       boolean needTimeout, ServiceGovern serviceGovern) throws Exception {
@@ -98,8 +102,20 @@ public class HippoClientBootstrap {
 
   public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {
     HippoResultCallBack hippoResultCallBack =
-        new HippoResultCallBack(request, needTimeout, hippoReadTimeout);
+        new HippoResultCallBack(request, needTimeout, hippoReadTimeout, this);
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
+  }
+
+  public void close() {
+    eventLoopGroup.shutdownGracefully();
+  }
+
+  public String getClientId() {
+    return clientId;
+  }
+
+  public AtomicInteger getReadTimeoutTimes() {
+    return readTimeoutTimes;
   }
 }

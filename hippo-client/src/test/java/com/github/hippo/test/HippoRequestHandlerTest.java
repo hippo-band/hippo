@@ -1,4 +1,4 @@
-package com.github.hippo.netty;
+package com.github.hippo.test;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,15 +13,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
-public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
+public class HippoRequestHandlerTest extends SimpleChannelInboundHandler<HippoResponse> {
 
-  private volatile ConcurrentHashMap<String, HippoResultCallBack> callBackMap =
+  private volatile ConcurrentHashMap<String, HippoResultCallBackTest> callBackMap =
       new ConcurrentHashMap<>();
   private String clientId;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
 
-  public HippoRequestHandler(String clientId, EventLoopGroup eventLoopGroup) {
+  public HippoRequestHandlerTest(String clientId, EventLoopGroup eventLoopGroup) {
     this.clientId = clientId;
     this.eventLoopGroup = eventLoopGroup;
   }
@@ -45,7 +45,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
     // ping不需要记录到返回结果MAP里
     if (response != null && !("-99").equals(response.getRequestId())) {
-      HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
+      HippoResultCallBackTest hippoResultCallBack = callBackMap.remove(response.getRequestId());
       hippoResultCallBack.signal(response);
     }
   }
@@ -83,10 +83,10 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       c.signal(response);
     });
     callBackMap.clear();
-    HippoClientBootstrapMap.remove(clientId);
+    HippoClientBootstrapMapTest.remove(clientId);
   }
 
-  public void sendAsync(HippoResultCallBack hippoResultCallBack) {
+  public void sendAsync(HippoResultCallBackTest hippoResultCallBack) {
     callBackMap.put(hippoResultCallBack.getHippoRequest().getRequestId(), hippoResultCallBack);
     this.channel.writeAndFlush(hippoResultCallBack.getHippoRequest());
   }

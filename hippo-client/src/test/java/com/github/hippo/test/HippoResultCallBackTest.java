@@ -1,4 +1,4 @@
-package com.github.hippo.netty;
+package com.github.hippo.test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -12,26 +12,26 @@ import com.github.hippo.test.HippoClientBootstrapTest;
 
 import io.netty.handler.timeout.ReadTimeoutException;
 
-public class HippoResultCallBack {
+public class HippoResultCallBackTest {
   private Lock lock = new ReentrantLock();
   private Condition finish = lock.newCondition();
   private int hippoReadTimeout;
   private boolean needTimeout;
   private HippoResponse hippoResponse;
   private HippoRequest hippoRequest;
-  private HippoClientBootstrap hippoClientBootstrap;
+  private HippoClientBootstrapTest hippoClientBootstrapTest;
 
 
   public HippoRequest getHippoRequest() {
     return hippoRequest;
   }
 
-  public HippoResultCallBack(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
-      HippoClientBootstrap hippoClientBootstrap) {
+  public HippoResultCallBackTest(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
+                                 HippoClientBootstrapTest hippoClientBootstrapTest) {
     this.hippoRequest = hippoRequest;
     this.needTimeout = needTimeout;
     this.hippoReadTimeout = hippoReadTimeout;
-    this.hippoClientBootstrap = hippoClientBootstrap;
+    this.hippoClientBootstrapTest = hippoClientBootstrapTest;
   }
 
   public void signal(HippoResponse hippoResponse) {
@@ -53,15 +53,18 @@ public class HippoResultCallBack {
         waitTime = 60;
       }
       if (!finish.await(waitTime, TimeUnit.SECONDS)) {
-        hippoClientBootstrap.getReadTimeoutTimes().incrementAndGet();
+        hippoClientBootstrapTest.getReadTimeoutTimes().incrementAndGet();
+      }
+      if (hippoClientBootstrapTest.getReadTimeoutTimes().compareAndSet(3, 0)) {
+
+        System.out.println("aaa:" + hippoClientBootstrapTest.getClientId() + ",,,"
+            + HippoClientBootstrapMapTest.get(hippoClientBootstrapTest.getClientId()));
+        HippoClientBootstrapTest remove =
+            HippoClientBootstrapMapTest.remove(hippoClientBootstrapTest.getClientId());
+        remove.close();
       }
       if (hippoResponse != null) {
         return hippoResponse;
-      }
-      if (hippoClientBootstrap.getReadTimeoutTimes().compareAndSet(6, 0)) {
-        HippoClientBootstrapTest remove =
-            HippoClientBootstrapMapTest.remove(hippoClientBootstrap.getClientId());
-        remove.close();
       }
     } catch (InterruptedException e) {
       e.printStackTrace();
