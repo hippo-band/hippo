@@ -26,8 +26,8 @@ public class HippoResultCallBackTest {
     return hippoRequest;
   }
 
-  public HippoResultCallBackTest(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
-                                 HippoClientBootstrapTest hippoClientBootstrapTest) {
+  public HippoResultCallBackTest(HippoRequest hippoRequest, boolean needTimeout,
+      int hippoReadTimeout, HippoClientBootstrapTest hippoClientBootstrapTest) {
     this.hippoRequest = hippoRequest;
     this.needTimeout = needTimeout;
     this.hippoReadTimeout = hippoReadTimeout;
@@ -57,8 +57,6 @@ public class HippoResultCallBackTest {
       }
       if (hippoClientBootstrapTest.getReadTimeoutTimes().compareAndSet(3, 0)) {
 
-        System.out.println("aaa:" + hippoClientBootstrapTest.getClientId() + ",,,"
-            + HippoClientBootstrapMapTest.get(hippoClientBootstrapTest.getClientId()));
         HippoClientBootstrapTest remove =
             HippoClientBootstrapMapTest.remove(hippoClientBootstrapTest.getClientId());
         remove.close();

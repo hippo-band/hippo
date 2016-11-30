@@ -49,7 +49,6 @@ public class HippoClientBootstrapTest {
 
   public static HippoClientBootstrapTest getBootstrap(String clientId, int hippoReadTimeout,
       boolean needTimeout, ServiceGovern serviceGovern) throws Exception {
-    System.out.println(HippoClientBootstrapMapTest.bootstrapMap);
     if (!HippoClientBootstrapMapTest.containsKey(clientId)) {
       synchronized (HippoClientBootstrapMapTest.class) {
         if (!HippoClientBootstrapMapTest.containsKey(clientId)) {
@@ -127,7 +126,7 @@ public class HippoClientBootstrapTest {
 
         try {
           HippoClientBootstrapTest bootstrap =
-              HippoClientBootstrapTest.getBootstrap("testClient111", 1, true, null);
+              HippoClientBootstrapTest.getBootstrap("testClient111", 1, false, null);
 
           HippoRequest request = new HippoRequest();
           request.setClientId("testClient111");

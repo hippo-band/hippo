@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.enums.HippoRequestEnum;
+import com.github.hippo.threadpool.HippoClientProcessPool;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -45,8 +46,10 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
     // ping不需要记录到返回结果MAP里
     if (response != null && !("-99").equals(response.getRequestId())) {
-      HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
-      hippoResultCallBack.signal(response);
+      HippoClientProcessPool.INSTANCE.getPool().execute(() -> {
+        HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
+        hippoResultCallBack.signal(response);
+      });
     }
   }
 

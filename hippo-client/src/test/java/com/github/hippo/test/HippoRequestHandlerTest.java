@@ -1,6 +1,8 @@
 package com.github.hippo.test;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
@@ -20,6 +22,7 @@ public class HippoRequestHandlerTest extends SimpleChannelInboundHandler<HippoRe
   private String clientId;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
+  private ExecutorService executorService = Executors.newFixedThreadPool(5);
 
   public HippoRequestHandlerTest(String clientId, EventLoopGroup eventLoopGroup) {
     this.clientId = clientId;
@@ -45,8 +48,10 @@ public class HippoRequestHandlerTest extends SimpleChannelInboundHandler<HippoRe
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
     // ping不需要记录到返回结果MAP里
     if (response != null && !("-99").equals(response.getRequestId())) {
-      HippoResultCallBackTest hippoResultCallBack = callBackMap.remove(response.getRequestId());
-      hippoResultCallBack.signal(response);
+      executorService.execute(() -> {
+        HippoResultCallBackTest hippoResultCallBack = callBackMap.remove(response.getRequestId());
+        hippoResultCallBack.signal(response);
+      });
     }
   }
 
