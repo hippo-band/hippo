@@ -7,8 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.test.HippoClientBootstrapMapTest;
-import com.github.hippo.test.HippoClientBootstrapTest;
 
 import io.netty.handler.timeout.ReadTimeoutException;
 
@@ -59,8 +57,8 @@ public class HippoResultCallBack {
         return hippoResponse;
       }
       if (hippoClientBootstrap.getReadTimeoutTimes().compareAndSet(6, 0)) {
-        HippoClientBootstrapTest remove =
-            HippoClientBootstrapMapTest.remove(hippoClientBootstrap.getClientId());
+        HippoClientBootstrap remove =
+            HippoClientBootstrapMap.remove(hippoClientBootstrap.getClientId());
         remove.close();
       }
     } catch (InterruptedException e) {
