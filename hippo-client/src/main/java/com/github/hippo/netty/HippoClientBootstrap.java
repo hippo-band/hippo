@@ -102,7 +102,7 @@ public class HippoClientBootstrap {
 
   public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {
     HippoResultCallBack hippoResultCallBack =
-        new HippoResultCallBack(request, needTimeout, hippoReadTimeout, this);
+        new HippoResultCallBack(request, needTimeout, hippoReadTimeout, readTimeoutTimes, clientId);
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
   }

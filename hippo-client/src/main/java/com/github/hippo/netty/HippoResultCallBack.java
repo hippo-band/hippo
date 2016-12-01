@@ -1,6 +1,7 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,7 +18,8 @@ public class HippoResultCallBack {
   private boolean needTimeout;
   private HippoResponse hippoResponse;
   private HippoRequest hippoRequest;
-  private HippoClientBootstrap hippoClientBootstrap;
+  private AtomicInteger readTimeoutTimes;
+  private String clientId;
 
 
   public HippoRequest getHippoRequest() {
@@ -25,11 +27,12 @@ public class HippoResultCallBack {
   }
 
   public HippoResultCallBack(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
-      HippoClientBootstrap hippoClientBootstrap) {
+      AtomicInteger readTimeoutTimes, String clientId) {
     this.hippoRequest = hippoRequest;
     this.needTimeout = needTimeout;
     this.hippoReadTimeout = hippoReadTimeout;
-    this.hippoClientBootstrap = hippoClientBootstrap;
+    this.readTimeoutTimes = readTimeoutTimes;
+    this.clientId = clientId;
   }
 
   public void signal(HippoResponse hippoResponse) {
@@ -51,15 +54,13 @@ public class HippoResultCallBack {
         waitTime = 60;
       }
       if (!finish.await(waitTime, TimeUnit.SECONDS)) {
-        hippoClientBootstrap.getReadTimeoutTimes().incrementAndGet();
+        readTimeoutTimes.incrementAndGet();
       }
       if (hippoResponse != null) {
         return hippoResponse;
       }
-      if (hippoClientBootstrap.getReadTimeoutTimes().compareAndSet(6, 0)) {
-        HippoClientBootstrap remove =
-            HippoClientBootstrapMap.remove(hippoClientBootstrap.getClientId());
-        remove.close();
+      if (readTimeoutTimes.compareAndSet(6, 0)) {
+        HippoClientBootstrapMap.remove(clientId).close();
       }
     } catch (InterruptedException e) {
       e.printStackTrace();

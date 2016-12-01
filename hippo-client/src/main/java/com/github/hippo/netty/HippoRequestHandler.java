@@ -16,8 +16,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 
 public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
 
-  private volatile ConcurrentHashMap<String, HippoResultCallBack> callBackMap =
-      new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, HippoResultCallBack> callBackMap = new ConcurrentHashMap<>();
   private String clientId;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
