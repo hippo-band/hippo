@@ -3,6 +3,7 @@ package com.github.hippo.netty;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import com.github.hippo.bean.HippoDecoder;
 import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.exception.HippoServiceUnavailableException;
 import com.github.hippo.govern.ServiceGovern;
 
 import io.netty.bootstrap.Bootstrap;
@@ -70,7 +72,7 @@ public class HippoClientBootstrap {
     init();
   }
 
-  private void init() throws Exception {
+  private void init() {
     initHostAndPort();
     try {
       handler = new HippoRequestHandler(this.clientId, this.eventLoopGroup);
@@ -87,17 +89,24 @@ public class HippoClientBootstrap {
       });
       bootstrap.connect(host, port).sync();
     } catch (Exception e) {
-      LOGGER.error("send error", e);
-      throw e;
+      LOGGER.error("hippo client init error:" + this.clientId, e);
+      throw new HippoServiceUnavailableException("[" + this.clientId + "]服务不可用,初始化失败.", e);
     }
   }
 
 
   private void initHostAndPort() {
     String serviceAddress = serviceGovern.getServiceAddress(clientId);
+    if (StringUtils.isBlank(serviceAddress)) {
+      throw new HippoServiceUnavailableException("[" + clientId + "]没有发现可用的服务.");
+    }
     String[] split = serviceAddress.split(":");
     this.host = split[0];
     this.port = Integer.parseInt(split[1]);
+    if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
+      throw new HippoServiceUnavailableException(
+          "[" + clientId + "]服务参数异常.host=" + host + ",port=" + port);
+    }
   }
 
   public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {

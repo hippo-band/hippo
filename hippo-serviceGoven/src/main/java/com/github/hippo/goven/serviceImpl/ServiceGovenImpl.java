@@ -34,9 +34,9 @@ public class ServiceGovenImpl implements ServiceGovern {
   @Autowired
   private EurekaGovernatedBaseService baseService;
 
-  @Value("${erueka.ipAddress:localhost}")
+  @Value("${eureka.ipAddress:localhost}")
   private String ipAddress;
-  @Value("${eureka.serviceUrls}")
+  @Value("${eureka.serviceUrl}")
   private String serviceUrl;
   @Value("${eureka.port:8761}")
   private int eurekaPort;
