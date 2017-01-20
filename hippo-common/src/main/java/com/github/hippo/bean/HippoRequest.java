@@ -20,6 +20,8 @@ public class HippoRequest implements Serializable {
   private static final long serialVersionUID = 8703973176164750873L;
   private String clientId;
   private String requestId;
+  private String msgId;
+  private int msgLevel;
   private Integer requestType = HippoRequestEnum.RPC.getType();// default
   private String className;
   private String methodName;
@@ -41,6 +43,22 @@ public class HippoRequest implements Serializable {
 
   public void setRequestId(String requestId) {
     this.requestId = requestId;
+  }
+
+  public String getMsgId() {
+    return msgId;
+  }
+
+  public void setMsgId(String msgId) {
+    this.msgId = msgId;
+  }
+
+  public int getMsgLevel() {
+    return msgLevel;
+  }
+
+  public void setMsgLevel(int msgLevel) {
+    this.msgLevel = msgLevel;
   }
 
   public Integer getRequestType() {
@@ -85,9 +103,16 @@ public class HippoRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "HippoRequest{" + "requestId='" + requestId + '\'' + ", requestType=" + requestType
-        + ", className='" + className + '\'' + ", methodName='" + methodName + '\''
-        + ", parameterTypes=" + Arrays.toString(parameterTypes) + ", parameters="
-        + Arrays.toString(parameters) + '}';
+    return "HippoRequest{" +
+            "clientId='" + clientId + '\'' +
+            ", requestId='" + requestId + '\'' +
+            ", msgId='" + msgId + '\'' +
+            ", msgLevel=" + msgLevel +
+            ", requestType=" + requestType +
+            ", className='" + className + '\'' +
+            ", methodName='" + methodName + '\'' +
+            ", parameterTypes=" + Arrays.toString(parameterTypes) +
+            ", parameters=" + Arrays.toString(parameters) +
+            '}';
   }
 }

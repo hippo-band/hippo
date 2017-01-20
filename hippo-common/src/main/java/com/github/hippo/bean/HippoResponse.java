@@ -16,6 +16,8 @@ public class HippoResponse implements Serializable {
    */
   private static final long serialVersionUID = -2553246569725890161L;
   private String requestId;
+  private String msgId;
+  private int msgLevel;
   private Object result;
   private Throwable throwable;
   private boolean isError = false;// default if true result is HippoRequest for trace request param
@@ -26,6 +28,22 @@ public class HippoResponse implements Serializable {
 
   public void setRequestId(String requestId) {
     this.requestId = requestId;
+  }
+
+  public String getMsgId() {
+    return msgId;
+  }
+
+  public void setMsgId(String msgId) {
+    this.msgId = msgId;
+  }
+
+  public int getMsgLevel() {
+    return msgLevel;
+  }
+
+  public void setMsgLevel(int msgLevel) {
+    this.msgLevel = msgLevel;
   }
 
   public Object getResult() {
@@ -50,5 +68,17 @@ public class HippoResponse implements Serializable {
 
   public void setError(boolean isError) {
     this.isError = isError;
+  }
+
+  @Override
+  public String toString() {
+    return "HippoResponse{" +
+            "requestId='" + requestId + '\'' +
+            ", msgId='" + msgId + '\'' +
+            ", msgLevel=" + msgLevel +
+            ", result=" + result +
+            ", throwable=" + throwable +
+            ", isError=" + isError +
+            '}';
   }
 }

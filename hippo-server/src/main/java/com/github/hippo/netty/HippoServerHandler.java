@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.github.hippo.cache.MsgThreadLocal;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,9 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   private void handle(ChannelHandlerContext ctx, HippoRequest request) {
     HippoResponse response = new HippoResponse();
     try {
+      MsgThreadLocal.Instance.setMsgId(request.getMsgId());
+      MsgThreadLocal.Instance.setMsgLevel(request.getMsgLevel() + 1);
+
       response.setRequestId(request.getRequestId());
 
       if (request.getRequestType() == 0) {
@@ -59,6 +63,9 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       response.setError(true);
       LOGGER.error("process error: request:" + ToStringBuilder.reflectionToString(request)
           + "&respose:" + ToStringBuilder.reflectionToString(response), e1);
+    }finally {
+      response.setMsgId(MsgThreadLocal.Instance.getMsgId());
+      response.setMsgLevel(MsgThreadLocal.Instance.getMsgLevel());
     }
     ctx.writeAndFlush(response);
   }

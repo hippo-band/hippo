@@ -3,6 +3,7 @@ package com.github.hippo.client;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
 
+import com.github.hippo.cache.MsgThreadLocal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,8 @@ public class HippoProxy {
         new Class<?>[] {inferfaceClass}, (proxy, method, args) -> {
           HippoRequest request = new HippoRequest();
           request.setRequestId(UUID.randomUUID().toString());
+          request.setMsgId(MsgThreadLocal.Instance.getMsgId());
+          request.setMsgLevel(MsgThreadLocal.Instance.getMsgLevel());
           request.setRequestType(0);
           request.setClassName(method.getDeclaringClass().getName());
           request.setMethodName(method.getName());
@@ -74,6 +77,8 @@ public class HippoProxy {
     objects[0] = parameter;
     HippoRequest request = new HippoRequest();
     request.setRequestId(UUID.randomUUID().toString());
+    request.setMsgId(MsgThreadLocal.Instance.getMsgId());
+    request.setMsgLevel(MsgThreadLocal.Instance.getMsgLevel());
     request.setRequestType(1);
     request.setClassName(serviceMethods[0]);
     request.setMethodName(serviceMethods[1]);

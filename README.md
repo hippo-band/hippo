@@ -26,6 +26,8 @@
 
     hippo的公共类,主要提供client/serviceImpl的注解,序列化/反序列化工具类,服务注册接口(用作用户自定义实现服务发现服务注册),hippo-client和hippo-server都依赖这个POM所以用户不需要自己在依赖
     详情:http:///
+    
+    rpc调用链的串起以及调用次数记录,如果日志需要打印出来,可以参考conf下logback.xml.bak文件的配置
 
 ###hippo-client
 
