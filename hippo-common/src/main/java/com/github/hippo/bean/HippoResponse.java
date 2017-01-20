@@ -16,11 +16,20 @@ public class HippoResponse implements Serializable {
    */
   private static final long serialVersionUID = -2553246569725890161L;
   private String requestId;
-  private String msgId;
-  private int msgLevel;
+  private String serviceName;
+  private String chainId;
+  private int chainOrder;
   private Object result;
   private Throwable throwable;
   private boolean isError = false;// default if true result is HippoRequest for trace request param
+
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
 
   public String getRequestId() {
     return requestId;
@@ -30,20 +39,21 @@ public class HippoResponse implements Serializable {
     this.requestId = requestId;
   }
 
-  public String getMsgId() {
-    return msgId;
+
+  public String getChainId() {
+    return chainId;
   }
 
-  public void setMsgId(String msgId) {
-    this.msgId = msgId;
+  public void setChainId(String chainId) {
+    this.chainId = chainId;
   }
 
-  public int getMsgLevel() {
-    return msgLevel;
+  public int getChainOrder() {
+    return chainOrder;
   }
 
-  public void setMsgLevel(int msgLevel) {
-    this.msgLevel = msgLevel;
+  public void setChainOrder(int chainOrder) {
+    this.chainOrder = chainOrder;
   }
 
   public Object getResult() {
@@ -72,13 +82,20 @@ public class HippoResponse implements Serializable {
 
   @Override
   public String toString() {
-    return "HippoResponse{" +
-            "requestId='" + requestId + '\'' +
-            ", msgId='" + msgId + '\'' +
-            ", msgLevel=" + msgLevel +
-            ", result=" + result +
-            ", throwable=" + throwable +
-            ", isError=" + isError +
-            '}';
+    String logResult = "null";
+    if (result != null) {
+      int index = result.toString().length();
+      if (index > 50) {
+        logResult = result.toString().substring(0, 50);
+      } else {
+        logResult = result.toString();
+      }
+    }
+    return "HippoResponse [requestId=" + requestId + ", serviceName=" + serviceName + ", chainId="
+        + chainId + ", chainOrder=" + chainOrder + ", result=" + logResult + ", throwable="
+        + throwable + ", isError=" + isError + "]";
   }
+
+
+
 }

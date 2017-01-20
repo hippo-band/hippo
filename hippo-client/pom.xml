@@ -55,6 +55,11 @@
 				<version>3.8.1</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+				<groupId>com.netflix.rxjava</groupId>
+				<artifactId>rxjava-core</artifactId>
+				<version>0.20.7</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>

@@ -17,12 +17,12 @@ import io.netty.handler.timeout.IdleStateEvent;
 public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
 
   private ConcurrentHashMap<String, HippoResultCallBack> callBackMap = new ConcurrentHashMap<>();
-  private String clientId;
+  private String serviceName;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
 
-  public HippoRequestHandler(String clientId, EventLoopGroup eventLoopGroup) {
-    this.clientId = clientId;
+  public HippoRequestHandler(String serviceName, EventLoopGroup eventLoopGroup) {
+    this.serviceName = serviceName;
     this.eventLoopGroup = eventLoopGroup;
   }
 
@@ -59,7 +59,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       IdleStateEvent e = (IdleStateEvent) evt;
       if (e.state() == IdleState.WRITER_IDLE) {
         HippoRequest hippoRequest = new HippoRequest();
-        hippoRequest.setClientId(clientId);
+        hippoRequest.setServiceName(serviceName);
         hippoRequest.setRequestId("-99");
         hippoRequest.setRequestType(HippoRequestEnum.PING.getType());
         ctx.writeAndFlush(hippoRequest);
@@ -85,7 +85,7 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       c.signal(response);
     });
     callBackMap.clear();
-    HippoClientBootstrapMap.remove(clientId);
+    HippoClientBootstrapMap.remove(serviceName);
   }
 
   public void sendAsync(HippoResultCallBack hippoResultCallBack) {

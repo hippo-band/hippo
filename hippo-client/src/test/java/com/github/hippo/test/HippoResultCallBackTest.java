@@ -58,7 +58,7 @@ public class HippoResultCallBackTest {
       if (hippoClientBootstrapTest.getReadTimeoutTimes().compareAndSet(3, 0)) {
 
         HippoClientBootstrapTest remove =
-            HippoClientBootstrapMapTest.remove(hippoClientBootstrapTest.getClientId());
+            HippoClientBootstrapMapTest.remove(hippoClientBootstrapTest.getserviceName());
         remove.close();
       }
       if (hippoResponse != null) {

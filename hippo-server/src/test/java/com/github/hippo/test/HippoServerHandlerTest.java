@@ -44,7 +44,7 @@ public class HippoServerHandlerTest extends SimpleChannelInboundHandler<HippoReq
       }
     }
     System.out.println(new Date().toLocaleString() + ".." + i + ".." + request.getRequestId() + ".."
-        + request.getClientId() + "..");
+        + request.getServiceName()+ "..");
     response.setResult(i);
     ctx.writeAndFlush(response);
   }

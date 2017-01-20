@@ -5,8 +5,6 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.github.hippo.cache.MsgThreadLocal;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cglib.reflect.FastClass;
@@ -14,6 +12,9 @@ import org.springframework.cglib.reflect.FastMethod;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.chain.ChainThreadLocal;
+import com.github.hippo.enums.HippoRequestEnum;
+import com.github.hippo.exception.HippoRequestTypeNotExistException;
 import com.github.hippo.server.HippoServiceImplCache;
 import com.github.hippo.util.GsonConvertUtils;
 
@@ -34,23 +35,31 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   private static final ExecutorService pool = Executors.newCachedThreadPool();
 
   private void handle(ChannelHandlerContext ctx, HippoRequest request) {
+    long start = System.currentTimeMillis();
     HippoResponse response = new HippoResponse();
+    response.setChainId(request.getChainId());
+    response.setChainOrder(request.getChainOrder());
+    response.setServiceName(request.getServiceName());
+    HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
+    if (hippoRequestEnum != HippoRequestEnum.PING) {
+      LOGGER.info("hippo in param:" + request.toString());
+    }
     try {
-      MsgThreadLocal.Instance.setMsgId(request.getMsgId());
-      MsgThreadLocal.Instance.setMsgLevel(request.getMsgLevel() + 1);
-
+      ChainThreadLocal.INSTANCE.setChainId(request.getChainId());
+      ChainThreadLocal.INSTANCE.incChainOrder(request.getChainOrder());
       response.setRequestId(request.getRequestId());
-
-      if (request.getRequestType() == 0) {
-        response.setResult(rpcProcess(request));
-      } else if (request.getRequestType() == 1) {
+      if (hippoRequestEnum == null) {
+        response.setError(true);
+        response.setThrowable(new HippoRequestTypeNotExistException(
+            "HippoRequest requestType not exist.current requestType is:"
+                + request.getRequestType()));
+      } else if (hippoRequestEnum == HippoRequestEnum.API) {
         response.setResult(apiProcess(request));
-      } else if (request.getRequestType() == 2) {
+      } else if (hippoRequestEnum == HippoRequestEnum.RPC) {
+        response.setResult(rpcProcess(request));
+      } else if (hippoRequestEnum == HippoRequestEnum.PING) {
         response.setResult("ping success");
         response.setRequestId("-99");
-      } else {
-        response.setError(true);
-        response.setThrowable(new IllegalAccessException("HippoRequest requestType err"));
       }
     } catch (Exception e1) {
       if (e1 instanceof InvocationTargetException) {
@@ -61,12 +70,13 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       response.setRequestId(request.getRequestId());
       response.setResult(request);
       response.setError(true);
-      LOGGER.error("process error: request:" + ToStringBuilder.reflectionToString(request)
-          + "&respose:" + ToStringBuilder.reflectionToString(response), e1);
-    }finally {
-      response.setMsgId(MsgThreadLocal.Instance.getMsgId());
-      response.setMsgLevel(MsgThreadLocal.Instance.getMsgLevel());
     }
+    ChainThreadLocal.INSTANCE.clearTL();
+    if (hippoRequestEnum != HippoRequestEnum.PING) {
+      LOGGER.info("hippo out result:" + response.toString() + ",耗时:"
+          + (System.currentTimeMillis() - start) + "毫秒");
+    }
+
     ctx.writeAndFlush(response);
   }
 

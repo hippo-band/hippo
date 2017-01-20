@@ -38,7 +38,7 @@ public class HippoClientBootstrapTest {
   private boolean needTimeout;
   // 记录这个channel读超时的次数,默认超过6次就断掉连接等待重连
   private AtomicInteger readTimeoutTimes = new AtomicInteger(0);
-  private String clientId;
+  private String serviceName;
 
   private Bootstrap bootstrap = new Bootstrap();
   private NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
@@ -47,23 +47,23 @@ public class HippoClientBootstrapTest {
 
   private ServiceGovern serviceGovern;
 
-  public static HippoClientBootstrapTest getBootstrap(String clientId, int hippoReadTimeout,
+  public static HippoClientBootstrapTest getBootstrap(String serviceName, int hippoReadTimeout,
       boolean needTimeout, ServiceGovern serviceGovern) throws Exception {
-    if (!HippoClientBootstrapMapTest.containsKey(clientId)) {
+    if (!HippoClientBootstrapMapTest.containsKey(serviceName)) {
       synchronized (HippoClientBootstrapMapTest.class) {
-        if (!HippoClientBootstrapMapTest.containsKey(clientId)) {
+        if (!HippoClientBootstrapMapTest.containsKey(serviceName)) {
           HippoClientBootstrapTest hippoClientBootstrap =
-              new HippoClientBootstrapTest(clientId, hippoReadTimeout, needTimeout, serviceGovern);
-          HippoClientBootstrapMapTest.put(clientId, hippoClientBootstrap);
+              new HippoClientBootstrapTest(serviceName, hippoReadTimeout, needTimeout, serviceGovern);
+          HippoClientBootstrapMapTest.put(serviceName, hippoClientBootstrap);
         }
       }
     }
-    return HippoClientBootstrapMapTest.get(clientId);
+    return HippoClientBootstrapMapTest.get(serviceName);
   }
 
-  private HippoClientBootstrapTest(String clientId, int hippoReadTimeout, boolean needTimeout,
+  private HippoClientBootstrapTest(String serviceName, int hippoReadTimeout, boolean needTimeout,
       ServiceGovern serviceGovern) throws Exception {
-    this.clientId = clientId;
+    this.serviceName = serviceName;
     this.hippoReadTimeout = hippoReadTimeout;
     this.needTimeout = needTimeout;
     this.serviceGovern = serviceGovern;
@@ -73,7 +73,7 @@ public class HippoClientBootstrapTest {
   private void init() throws Exception {
     initHostAndPort();
     try {
-      handler = new HippoRequestHandlerTest(this.clientId, this.eventLoopGroup);
+      handler = new HippoRequestHandlerTest(this.serviceName, this.eventLoopGroup);
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);
       bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -98,7 +98,7 @@ public class HippoClientBootstrapTest {
 
 
   private void initHostAndPort() {
-    // String serviceAddress = serviceGovern.getServiceAddress(clientId);
+    // String serviceAddress = serviceGovern.getServiceAddress(serviceName);
     // String[] split = serviceAddress.split(":");
     // this.host = split[0];
     // this.port = Integer.parseInt(split[1]);
@@ -129,7 +129,7 @@ public class HippoClientBootstrapTest {
               HippoClientBootstrapTest.getBootstrap("testClient111", 1, false, null);
 
           HippoRequest request = new HippoRequest();
-          request.setClientId("testClient111");
+          request.setServiceName("testClient111");
           String requestId = "12345-" + new Random().nextInt(1000);
           request.setRequestId(requestId);
           HippoResultCallBackTest sendAsync = bootstrap.sendAsync(request);
@@ -151,7 +151,7 @@ public class HippoClientBootstrapTest {
     // HippoClientBootstrapTest.getBootstrap("testClient222", 1, false, null);
     //
     // HippoRequest request = new HippoRequest();
-    // request.setClientId("testClient222");
+    // request.setserviceName("testClient222");
     // String requestId = "abcde-" + new Random().nextInt(1000);
     // request.setRequestId(requestId);
     // HippoResultCallBack sendAsync = bootstrap2.sendAsync(request);
@@ -169,7 +169,7 @@ public class HippoClientBootstrapTest {
           HippoClientBootstrapTest bootstrap3 =
               HippoClientBootstrapTest.getBootstrap("testClient111", 1, true, null);
           HippoRequest request = new HippoRequest();
-          request.setClientId("testClient111");
+          request.setServiceName("testClient111");
           String requestId = "56789-" + new Random().nextInt(1000);
           request.setRequestId(requestId);
           HippoResultCallBackTest sendAsync = bootstrap3.sendAsync(request);
@@ -187,8 +187,8 @@ public class HippoClientBootstrapTest {
     eventLoopGroup.shutdownGracefully();
   }
 
-  public String getClientId() {
-    return clientId;
+  public String getserviceName() {
+    return serviceName;
   }
 
 }

@@ -48,19 +48,19 @@ public class HippoClientBootstrap {
 
 
 
-  public static HippoClientBootstrap getBootstrap(String clientId, int hippoReadTimeout,
+  public static HippoClientBootstrap getBootstrap(String serviceName, int hippoReadTimeout,
       boolean needTimeout, ServiceGovern serviceGovern) throws Exception {
 
-    if (!HippoClientBootstrapMap.containsKey(clientId)) {
+    if (!HippoClientBootstrapMap.containsKey(serviceName)) {
       synchronized (HippoClientBootstrapMap.class) {
-        if (!HippoClientBootstrapMap.containsKey(clientId)) {
+        if (!HippoClientBootstrapMap.containsKey(serviceName)) {
           HippoClientBootstrap hippoClientBootstrap =
-              new HippoClientBootstrap(clientId, hippoReadTimeout, needTimeout, serviceGovern);
-          HippoClientBootstrapMap.put(clientId, hippoClientBootstrap);
+              new HippoClientBootstrap(serviceName, hippoReadTimeout, needTimeout, serviceGovern);
+          HippoClientBootstrapMap.put(serviceName, hippoClientBootstrap);
         }
       }
     }
-    return HippoClientBootstrapMap.get(clientId);
+    return HippoClientBootstrapMap.get(serviceName);
   }
 
   private HippoClientBootstrap(String clientId, int hippoReadTimeout, boolean needTimeout,

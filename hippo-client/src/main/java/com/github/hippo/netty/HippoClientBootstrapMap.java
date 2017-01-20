@@ -13,19 +13,19 @@ public final class HippoClientBootstrapMap {
 
   private static final Map<String, HippoClientBootstrap> bootstrapMap = new ConcurrentHashMap<>();
 
-  public static void put(String clientId, HippoClientBootstrap bootstrap) {
-    bootstrapMap.put(clientId, bootstrap);
+  public static void put(String serviceName, HippoClientBootstrap bootstrap) {
+    bootstrapMap.put(serviceName, bootstrap);
   }
 
-  public static HippoClientBootstrap get(String clientId) {
-    return bootstrapMap.get(clientId);
+  public static HippoClientBootstrap get(String serviceName) {
+    return bootstrapMap.get(serviceName);
   }
 
-  public static boolean containsKey(String clientId) {
-    return bootstrapMap.containsKey(clientId);
+  public static boolean containsKey(String serviceName) {
+    return bootstrapMap.containsKey(serviceName);
   }
 
-  public static HippoClientBootstrap remove(String clientId) {
-    return bootstrapMap.remove(clientId);
+  public static HippoClientBootstrap remove(String serviceName) {
+    return bootstrapMap.remove(serviceName);
   }
 }

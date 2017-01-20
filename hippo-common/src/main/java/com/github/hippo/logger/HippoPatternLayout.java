@@ -8,8 +8,8 @@ import ch.qos.logback.classic.PatternLayout;
 public class HippoPatternLayout extends PatternLayout {
 
 	static {
-		defaultConverterMap.put("msgId", MsgIdConvert.class.getName());
-		defaultConverterMap.put("msgLevel", MsgLevelConvert.class.getName());
+		defaultConverterMap.put("msgId", ChainIdConvert.class.getName());
+		defaultConverterMap.put("msgLevel", ChainOrderConvert.class.getName());
 	}
 
 }

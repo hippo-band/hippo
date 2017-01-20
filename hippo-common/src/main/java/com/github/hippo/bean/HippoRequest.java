@@ -18,23 +18,24 @@ public class HippoRequest implements Serializable {
    * 
    */
   private static final long serialVersionUID = 8703973176164750873L;
-  private String clientId;
+  private String serviceName;
   private String requestId;
-  private String msgId;
-  private int msgLevel;
+  private String chainId;
+  private int chainOrder;
   private Integer requestType = HippoRequestEnum.RPC.getType();// default
   private String className;
   private String methodName;
   private Class<?>[] parameterTypes;
   private Object[] parameters;
 
+  
 
-  public String getClientId() {
-    return clientId;
+  public String getServiceName() {
+    return serviceName;
   }
 
-  public void setClientId(String clientId) {
-    this.clientId = clientId;
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
   }
 
   public String getRequestId() {
@@ -45,20 +46,20 @@ public class HippoRequest implements Serializable {
     this.requestId = requestId;
   }
 
-  public String getMsgId() {
-    return msgId;
+  public String getChainId() {
+    return chainId;
   }
 
-  public void setMsgId(String msgId) {
-    this.msgId = msgId;
+  public void setChainId(String chainId) {
+    this.chainId = chainId;
   }
 
-  public int getMsgLevel() {
-    return msgLevel;
+  public int getChainOrder() {
+    return chainOrder;
   }
 
-  public void setMsgLevel(int msgLevel) {
-    this.msgLevel = msgLevel;
+  public void setChainOrder(int chainOrder) {
+    this.chainOrder = chainOrder;
   }
 
   public Integer getRequestType() {
@@ -103,16 +104,11 @@ public class HippoRequest implements Serializable {
 
   @Override
   public String toString() {
-    return "HippoRequest{" +
-            "clientId='" + clientId + '\'' +
-            ", requestId='" + requestId + '\'' +
-            ", msgId='" + msgId + '\'' +
-            ", msgLevel=" + msgLevel +
-            ", requestType=" + requestType +
-            ", className='" + className + '\'' +
-            ", methodName='" + methodName + '\'' +
-            ", parameterTypes=" + Arrays.toString(parameterTypes) +
-            ", parameters=" + Arrays.toString(parameters) +
-            '}';
+    return "HippoRequest [serviceName=" + serviceName + ", requestId=" + requestId + ", chainId="
+        + chainId + ", chainOrder=" + chainOrder + ", requestType=" + requestType + ", className="
+        + className + ", methodName=" + methodName + ", parameterTypes="
+        + Arrays.toString(parameterTypes) + ", parameters=" + Arrays.toString(parameters) + "]";
   }
+
+
 }

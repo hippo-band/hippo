@@ -19,7 +19,7 @@ public class HippoResultCallBack {
   private HippoResponse hippoResponse;
   private HippoRequest hippoRequest;
   private AtomicInteger readTimeoutTimes;
-  private String clientId;
+  private String serviceName;
 
 
   public HippoRequest getHippoRequest() {
@@ -27,12 +27,12 @@ public class HippoResultCallBack {
   }
 
   public HippoResultCallBack(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
-      AtomicInteger readTimeoutTimes, String clientId) {
+      AtomicInteger readTimeoutTimes, String serviceName) {
     this.hippoRequest = hippoRequest;
     this.needTimeout = needTimeout;
     this.hippoReadTimeout = hippoReadTimeout;
     this.readTimeoutTimes = readTimeoutTimes;
-    this.clientId = clientId;
+    this.serviceName = serviceName;
   }
 
   public void signal(HippoResponse hippoResponse) {
@@ -60,7 +60,7 @@ public class HippoResultCallBack {
         return hippoResponse;
       }
       if (readTimeoutTimes.compareAndSet(6, 0)) {
-        HippoClientBootstrapMap.remove(clientId).close();
+        HippoClientBootstrapMap.remove(serviceName).close();
       }
     } catch (InterruptedException e) {
       e.printStackTrace();
