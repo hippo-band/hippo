@@ -56,9 +56,14 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>com.netflix.rxjava</groupId>
-				<artifactId>rxjava-core</artifactId>
-				<version>0.20.7</version>
+				<groupId>com.netflix.hystrix</groupId>
+				<artifactId>hystrix-core</artifactId>
+				<version>1.5.8</version>
+			</dependency>
+			<dependency>
+				<groupId>com.netflix.hystrix</groupId>
+				<artifactId>hystrix-metrics-event-stream</artifactId>
+				<version>1.5.8</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -75,6 +80,20 @@
 		<dependency>
 			<groupId>com.github.hippo-band</groupId>
 			<artifactId>hippo-serviceGoven</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>com.netflix.rxjava</groupId>
+					<artifactId>rxjava-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.hystrix</groupId>
+			<artifactId>hystrix-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.netflix.hystrix</groupId>
+			<artifactId>hystrix-metrics-event-stream</artifactId>
 		</dependency>
 	</dependencies>
 
