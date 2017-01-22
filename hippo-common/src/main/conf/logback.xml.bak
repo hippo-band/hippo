@@ -26,7 +26,7 @@
 		</filter>
 		<encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
 			<layout class="com.github.hippo.logger.HippoPatternLayout">
-				<pattern>%date [%thread MsgLevel:%msgLevel MsgId:%msgId] %-5level %logger - %msg%n"></pattern>
+				<pattern>%date [%thread ChainOrder:%ChainOrder ChainId:%ChainId] %-5level %logger - %msg%n"></pattern>
 			</layout>
 		</encoder>
 	</appender>
