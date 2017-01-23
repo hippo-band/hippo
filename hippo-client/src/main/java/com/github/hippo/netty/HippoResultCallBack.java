@@ -8,8 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-
-import io.netty.handler.timeout.ReadTimeoutException;
+import com.github.hippo.exception.HippoReadTimeoutException;
 
 public class HippoResultCallBack {
   private Lock lock = new ReentrantLock();
@@ -25,8 +24,8 @@ public class HippoResultCallBack {
     return hippoRequest;
   }
 
-  protected HippoResultCallBack(HippoRequest hippoRequest, int timeout, AtomicInteger readTimeoutTimes,
-      String serviceName) {
+  protected HippoResultCallBack(HippoRequest hippoRequest, int timeout,
+      AtomicInteger readTimeoutTimes, String serviceName) {
     this.hippoRequest = hippoRequest;
     this.timeout = timeout;
     this.readTimeoutTimes = readTimeoutTimes;
@@ -44,9 +43,9 @@ public class HippoResultCallBack {
   }
 
   public HippoResponse getResult() {
+    int waitTime = timeout;
     try {
       lock.lock();
-      int waitTime = timeout;
       // 最大1分钟超时
       if (waitTime <= 0) {
         waitTime = 60000;
@@ -68,7 +67,8 @@ public class HippoResultCallBack {
     hippoResponse = new HippoResponse();
     hippoResponse.setError(true);
     hippoResponse.setRequestId(hippoRequest.getRequestId());
-    hippoResponse.setThrowable(ReadTimeoutException.INSTANCE);
+    hippoResponse.setThrowable(
+        new HippoReadTimeoutException("[" + hippoRequest + "]超时,超时时间[" + waitTime + "]毫秒"));
     return hippoResponse;
   }
 }

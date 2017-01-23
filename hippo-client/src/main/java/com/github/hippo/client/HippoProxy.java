@@ -11,11 +11,10 @@ import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
+import com.github.hippo.exception.HippoReadTimeoutException;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoResultCallBack;
-
-import io.netty.handler.timeout.ReadTimeoutException;
 
 /**
  * client代理类
@@ -58,7 +57,7 @@ public class HippoProxy {
     }
     HippoResponse result = getResult(serviceName, request, timeout);
     if (result.isError()) {
-      if (result.getThrowable() instanceof ReadTimeoutException && index > 0) {
+      if (result.getThrowable() instanceof HippoReadTimeoutException && index > 0) {
         return getHippoResponse(serviceName, request, timeout, retryTimes - 1);
       } else {
         throw result.getThrowable();
