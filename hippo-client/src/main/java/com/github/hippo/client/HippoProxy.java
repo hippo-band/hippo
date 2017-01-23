@@ -4,7 +4,6 @@ import java.lang.reflect.Proxy;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.github.hippo.annotation.HippoService;
@@ -12,6 +11,7 @@ import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
+import com.github.hippo.exception.HippoReadTimeoutException;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoResultCallBack;
@@ -28,13 +28,8 @@ public class HippoProxy {
   @Autowired
   private ServiceGovern serviceGovern;
 
-  @Value("${hippo.read.timeout:3}")
-  private int hippoReadTimeout;
-  @Value("${hippo.needTimeout:false}")
-  private boolean needTimeout;
-
   @SuppressWarnings("unchecked")
-  <T> T create(Class<?> inferfaceClass) {
+  <T> T create(Class<?> inferfaceClass, int timeout, int retryTimes) {
     return (T) Proxy.newProxyInstance(inferfaceClass.getClassLoader(),
         new Class<?>[] {inferfaceClass}, (proxy, method, args) -> {
           HippoRequest request = new HippoRequest();
@@ -49,23 +44,38 @@ public class HippoProxy {
           String serviceName = inferfaceClass.getAnnotation(HippoService.class).serviceName();
           request.setServiceName(serviceName);
           ChainThreadLocal.INSTANCE.clearTL();
-          return getHippoResponse(serviceName, request);
+          return getHippoResponse(serviceName, request, timeout, retryTimes);
         });
   }
 
-  private Object getHippoResponse(String serviceName, HippoRequest request) throws Throwable {
-    HippoClientBootstrap hippoClientBootstrap = HippoClientBootstrap.getBootstrap(serviceName,
-        hippoReadTimeout, needTimeout, serviceGovern);
-    HippoResultCallBack callback = hippoClientBootstrap.sendAsync(request);
-    HippoResponse result = callback.getResult();
+  private Object getHippoResponse(String serviceName, HippoRequest request, int timeout,
+      int retryTimes) throws Throwable {
+    // 重试次数不能大于5次
+    int index = retryTimes;
+    if (retryTimes >= 5) {
+      index = 5;
+    }
+    HippoResponse result = getResult(serviceName, request, timeout);
     if (result.isError()) {
-      throw result.getThrowable();
+      if (result.getThrowable() instanceof HippoReadTimeoutException && index > 0) {
+        return getHippoResponse(serviceName, request, timeout, retryTimes - 1);
+      } else {
+        throw result.getThrowable();
+      }
     }
     return result.getResult();
   }
 
+  private HippoResponse getResult(String serviceName, HippoRequest request, int timeout)
+      throws Exception {
+    HippoClientBootstrap hippoClientBootstrap =
+        HippoClientBootstrap.getBootstrap(serviceName, timeout, serviceGovern);
+    HippoResultCallBack callback = hippoClientBootstrap.sendAsync(request);
+    return callback.getResult();
+  }
+
   /**
-   * api request
+   * api request 默认5秒超时,2次重试
    * 
    * @param serviceHost
    * @param serviceMethod
@@ -75,6 +85,22 @@ public class HippoProxy {
    */
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter)
       throws Throwable {
+    return apiRequest(serviceName, serviceMethod, parameter, 5000, 2);
+  }
+
+  /**
+   * api request
+   * 
+   * @param serviceName
+   * @param serviceMethod
+   * @param parameter
+   * @param timeout 超时时间 单位毫秒
+   * @param retryTimes 超时后自动重试次数
+   * @return
+   * @throws Throwable
+   */
+  public Object apiRequest(String serviceName, String serviceMethod, Object parameter, int timeout,
+      int retryTimes) throws Throwable {
     String[] serviceMethods = serviceMethod.split("/");
     Object[] objects = new Object[1];
     objects[0] = parameter;
@@ -89,6 +115,6 @@ public class HippoProxy {
     request.setParameters(objects);
     request.setServiceName(serviceName);
     ChainThreadLocal.INSTANCE.clearTL();
-    return getHippoResponse(serviceName, request);
+    return getHippoResponse(serviceName, request, timeout, retryTimes);
   }
 }

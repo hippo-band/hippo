@@ -32,7 +32,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HippoServerHandler.class);
-  private static final ExecutorService pool = Executors.newCachedThreadPool();
+  private static final ExecutorService pool =
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
   private void handle(ChannelHandlerContext ctx, HippoRequest request) {
     long start = System.currentTimeMillis();

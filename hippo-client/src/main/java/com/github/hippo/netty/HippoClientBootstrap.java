@@ -34,9 +34,8 @@ public class HippoClientBootstrap {
 
   private String host;
   private int port;
-  private int hippoReadTimeout;
-  private boolean needTimeout;
-  private String clientId;
+  private int timeout;
+  private String serviceName;
 
   private Bootstrap bootstrap = new Bootstrap();
   private NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
@@ -48,14 +47,14 @@ public class HippoClientBootstrap {
 
 
 
-  public static HippoClientBootstrap getBootstrap(String serviceName, int hippoReadTimeout,
-      boolean needTimeout, ServiceGovern serviceGovern) throws Exception {
+  public static HippoClientBootstrap getBootstrap(String serviceName, int timeout,
+      ServiceGovern serviceGovern) throws Exception {
 
     if (!HippoClientBootstrapMap.containsKey(serviceName)) {
       synchronized (HippoClientBootstrapMap.class) {
         if (!HippoClientBootstrapMap.containsKey(serviceName)) {
           HippoClientBootstrap hippoClientBootstrap =
-              new HippoClientBootstrap(serviceName, hippoReadTimeout, needTimeout, serviceGovern);
+              new HippoClientBootstrap(serviceName, timeout, serviceGovern);
           HippoClientBootstrapMap.put(serviceName, hippoClientBootstrap);
         }
       }
@@ -63,11 +62,10 @@ public class HippoClientBootstrap {
     return HippoClientBootstrapMap.get(serviceName);
   }
 
-  private HippoClientBootstrap(String clientId, int hippoReadTimeout, boolean needTimeout,
-      ServiceGovern serviceGovern) throws Exception {
-    this.clientId = clientId;
-    this.hippoReadTimeout = hippoReadTimeout;
-    this.needTimeout = needTimeout;
+  private HippoClientBootstrap(String serviceName, int timeout, ServiceGovern serviceGovern)
+      throws Exception {
+    this.serviceName = serviceName;
+    this.timeout = timeout;
     this.serviceGovern = serviceGovern;
     init();
   }
@@ -75,7 +73,7 @@ public class HippoClientBootstrap {
   private void init() {
     initHostAndPort();
     try {
-      handler = new HippoRequestHandler(this.clientId, this.eventLoopGroup);
+      handler = new HippoRequestHandler(this.serviceName, this.eventLoopGroup);
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);
       bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -89,29 +87,29 @@ public class HippoClientBootstrap {
       });
       bootstrap.connect(host, port).sync();
     } catch (Exception e) {
-      LOGGER.error("hippo client init error:" + this.clientId, e);
-      throw new HippoServiceUnavailableException("[" + this.clientId + "]服务不可用,初始化失败.", e);
+      LOGGER.error("hippo client init error:" + this.serviceName, e);
+      throw new HippoServiceUnavailableException("[" + this.serviceName + "]服务不可用,初始化失败.", e);
     }
   }
 
 
   private void initHostAndPort() {
-    String serviceAddress = serviceGovern.getServiceAddress(clientId);
+    String serviceAddress = serviceGovern.getServiceAddress(serviceName);
     if (StringUtils.isBlank(serviceAddress)) {
-      throw new HippoServiceUnavailableException("[" + clientId + "]没有发现可用的服务.");
+      throw new HippoServiceUnavailableException("[" + serviceName + "]没有发现可用的服务.");
     }
     String[] split = serviceAddress.split(":");
     this.host = split[0];
     this.port = Integer.parseInt(split[1]);
     if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
       throw new HippoServiceUnavailableException(
-          "[" + clientId + "]服务参数异常.host=" + host + ",port=" + port);
+          "[" + serviceName + "]服务参数异常.host=" + host + ",port=" + port);
     }
   }
 
   public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {
     HippoResultCallBack hippoResultCallBack =
-        new HippoResultCallBack(request, needTimeout, hippoReadTimeout, readTimeoutTimes, clientId);
+        new HippoResultCallBack(request, timeout, readTimeoutTimes, serviceName);
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
   }
@@ -120,8 +118,8 @@ public class HippoClientBootstrap {
     eventLoopGroup.shutdownGracefully();
   }
 
-  public String getClientId() {
-    return clientId;
+  public String getServiceName() {
+    return serviceName;
   }
 
   public AtomicInteger getReadTimeoutTimes() {

@@ -16,6 +16,7 @@ import com.github.hippo.goven.eureka.EurekaClientConfigBean;
 import com.github.hippo.goven.eureka.EurekaGovernatedBaseService;
 import com.github.hippo.goven.eureka.EurekaInstanceConfigBean;
 import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.govern.utils.ServiceGovernUtil;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.InstanceStatus;
@@ -38,7 +39,7 @@ public class ServiceGovenImpl implements ServiceGovern {
   private String ipAddress;
   @Value("${eureka.serviceUrl}")
   private String serviceUrl;
-  @Value("${eureka.port:8761}")
+  @Value("${eureka.port:0}")
   private int eurekaPort;
   @Value("${eureka.instance.preferIpAddress:true}")
   private boolean preferIpAddress;
@@ -123,7 +124,7 @@ public class ServiceGovenImpl implements ServiceGovern {
       if (eurekaPort != 0) {
         eureInstanceConfigBean.setNonSecurePort(eurekaPort);
       } else {
-        eureInstanceConfigBean.setNonSecurePort(7050);
+        eureInstanceConfigBean.setNonSecurePort(ServiceGovernUtil.getAvailablePort());
       }
     }
     eureInstanceConfigBean.setAppname(arg0 == null ? "eureka" : arg0);

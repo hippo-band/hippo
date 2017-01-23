@@ -8,34 +8,31 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-
-import io.netty.handler.timeout.ReadTimeoutException;
+import com.github.hippo.exception.HippoReadTimeoutException;
 
 public class HippoResultCallBack {
   private Lock lock = new ReentrantLock();
   private Condition finish = lock.newCondition();
-  private int hippoReadTimeout;
-  private boolean needTimeout;
+  private int timeout;
   private HippoResponse hippoResponse;
   private HippoRequest hippoRequest;
   private AtomicInteger readTimeoutTimes;
   private String serviceName;
 
 
-  public HippoRequest getHippoRequest() {
+  protected HippoRequest getHippoRequest() {
     return hippoRequest;
   }
 
-  public HippoResultCallBack(HippoRequest hippoRequest, boolean needTimeout, int hippoReadTimeout,
+  protected HippoResultCallBack(HippoRequest hippoRequest, int timeout,
       AtomicInteger readTimeoutTimes, String serviceName) {
     this.hippoRequest = hippoRequest;
-    this.needTimeout = needTimeout;
-    this.hippoReadTimeout = hippoReadTimeout;
+    this.timeout = timeout;
     this.readTimeoutTimes = readTimeoutTimes;
     this.serviceName = serviceName;
   }
 
-  public void signal(HippoResponse hippoResponse) {
+  protected void signal(HippoResponse hippoResponse) {
     this.hippoResponse = hippoResponse;
     try {
       lock.lock();
@@ -46,14 +43,14 @@ public class HippoResultCallBack {
   }
 
   public HippoResponse getResult() {
+    int waitTime = timeout;
     try {
       lock.lock();
-      int waitTime = hippoReadTimeout;
       // 最大1分钟超时
-      if (!needTimeout) {
-        waitTime = 60;
+      if (waitTime <= 0) {
+        waitTime = 60000;
       }
-      if (!finish.await(waitTime, TimeUnit.SECONDS)) {
+      if (!finish.await(waitTime, TimeUnit.MILLISECONDS)) {
         readTimeoutTimes.incrementAndGet();
       }
       if (hippoResponse != null) {
@@ -70,8 +67,8 @@ public class HippoResultCallBack {
     hippoResponse = new HippoResponse();
     hippoResponse.setError(true);
     hippoResponse.setRequestId(hippoRequest.getRequestId());
-    hippoResponse.setThrowable(ReadTimeoutException.INSTANCE);
-
+    hippoResponse.setThrowable(
+        new HippoReadTimeoutException("[" + hippoRequest + "]超时,超时时间[" + waitTime + "]毫秒"));
     return hippoResponse;
   }
 }
