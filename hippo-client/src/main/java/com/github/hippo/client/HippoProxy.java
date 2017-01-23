@@ -58,7 +58,7 @@ public class HippoProxy {
     }
     HippoResponse result = getResult(serviceName, request, timeout);
     if (result.isError()) {
-      if (result.getThrowable() instanceof ReadTimeoutException && index >= 0) {
+      if (result.getThrowable() instanceof ReadTimeoutException && index > 0) {
         return getHippoResponse(serviceName, request, timeout, retryTimes - 1);
       } else {
         throw result.getThrowable();
