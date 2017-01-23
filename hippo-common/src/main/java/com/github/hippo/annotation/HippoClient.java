@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 
 /**
  * hippo client
+ * 
  * @author sl
  *
  */
@@ -17,5 +18,17 @@ import java.lang.annotation.Target;
 @Documented
 @Inherited
 public @interface HippoClient {
+  /**
+   * 超时时间,默认5000毫秒
+   * 
+   * @return
+   */
+  int timeout() default 5000;
 
+  /**
+   * 超时失败重试次数,默认不重试
+   * 
+   * @return
+   */
+  int retryTimes() default 0;
 }

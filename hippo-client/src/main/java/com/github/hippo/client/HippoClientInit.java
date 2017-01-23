@@ -44,13 +44,14 @@ public class HippoClientInit implements ApplicationContextAware {
           objClz = AopUtils.getTargetClass(bean);
         }
         for (Field field : objClz.getDeclaredFields()) {
-          HippoClient rpcConsumer = field.getAnnotation(HippoClient.class);
-          if (rpcConsumer != null) {
+          HippoClient hippoClient = field.getAnnotation(HippoClient.class);
+          if (hippoClient != null) {
             @SuppressWarnings("rawtypes")
             Class type = field.getType();
             String key = type.getCanonicalName();
             if (!rpcConsumerMap.containsKey(key)) {
-              rpcConsumerMap.put(key, hippoProxy.create(type));
+              rpcConsumerMap.put(key,
+                  hippoProxy.create(type, hippoClient.timeout(), hippoClient.retryTimes()));
             }
             try {
               field.setAccessible(true);
