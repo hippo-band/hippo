@@ -1,10 +1,11 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.springframework.beans.BeanUtils;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
@@ -16,20 +17,15 @@ public class HippoResultCallBack {
   private int timeout;
   private HippoResponse hippoResponse;
   private HippoRequest hippoRequest;
-  private AtomicInteger readTimeoutTimes;
-  private String serviceName;
 
 
   protected HippoRequest getHippoRequest() {
     return hippoRequest;
   }
 
-  protected HippoResultCallBack(HippoRequest hippoRequest, int timeout,
-      AtomicInteger readTimeoutTimes, String serviceName) {
+  protected HippoResultCallBack(HippoRequest hippoRequest, int timeout) {
     this.hippoRequest = hippoRequest;
     this.timeout = timeout;
-    this.readTimeoutTimes = readTimeoutTimes;
-    this.serviceName = serviceName;
   }
 
   protected void signal(HippoResponse hippoResponse) {
@@ -43,32 +39,29 @@ public class HippoResultCallBack {
   }
 
   public HippoResponse getResult() {
-    int waitTime = timeout;
     try {
+      int waitTime = timeout;
       lock.lock();
       // 最大1分钟超时
       if (waitTime <= 0) {
         waitTime = 60000;
       }
       if (!finish.await(waitTime, TimeUnit.MILLISECONDS)) {
-        readTimeoutTimes.incrementAndGet();
-      }
-      if (hippoResponse != null) {
-        return hippoResponse;
-      }
-      if (readTimeoutTimes.compareAndSet(6, 0)) {
-        HippoClientBootstrapMap.remove(serviceName).close();
+        hippoResponse = new HippoResponse();
+        BeanUtils.copyProperties(hippoRequest, hippoResponse);
+        hippoResponse.setError(true);
+        hippoResponse.setRequestId(hippoRequest.getRequestId());
+        hippoResponse.setThrowable(
+            new HippoReadTimeoutException("[" + hippoRequest + "]超时,超时时间[" + waitTime + "]毫秒"));
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      hippoResponse = new HippoResponse();
+      BeanUtils.copyProperties(hippoRequest, hippoResponse);
+      hippoResponse.setError(true);
+      hippoResponse.setThrowable(e);
     } finally {
       lock.unlock();
     }
-    hippoResponse = new HippoResponse();
-    hippoResponse.setError(true);
-    hippoResponse.setRequestId(hippoRequest.getRequestId());
-    hippoResponse.setThrowable(
-        new HippoReadTimeoutException("[" + hippoRequest + "]超时,超时时间[" + waitTime + "]毫秒"));
     return hippoResponse;
   }
 }

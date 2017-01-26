@@ -1,6 +1,6 @@
 package com.github.hippo.exception;
 /**
- * 服务找不到
+ * 读超时
  * @author sl
  *
  */
