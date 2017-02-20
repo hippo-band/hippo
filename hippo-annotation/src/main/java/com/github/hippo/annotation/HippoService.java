@@ -20,18 +20,5 @@ public @interface HippoService {
    * @return 服务注册名
    */
   String serviceName();
-
-  /**
-   * 超时时间,默认10秒
-   * 
-   * @return
-   */
-  int timeOut() default 10;
-
-  /**
-   * 超时失败重试次数,默认不重试
-   * 
-   * @return
-   */
-  int retryTimes() default 0;
+  
 }
