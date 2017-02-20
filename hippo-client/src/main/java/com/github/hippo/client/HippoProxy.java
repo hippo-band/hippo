@@ -77,11 +77,11 @@ public class HippoProxy {
   /**
    * api request 默认5秒超时,2次重试
    * 
-   * @param serviceHost
-   * @param serviceMethod
-   * @param parameter
-   * @return
-   * @throws Throwable
+   * @param serviceName 服务名
+   * @param serviceMethod 方法名
+   * @param parameter 参数
+   * @return 方法返回值
+   * @throws Throwable 异常
    */
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter)
       throws Throwable {

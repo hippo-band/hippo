@@ -14,8 +14,7 @@ public final class ServiceGovernUtil {
   /**
    * 获取服务器可用的端口(不需要用户自己设定端口了)
    * 
-   * @return
-   * @throws IOException
+   * @return 可用端口
    */
   public static int getAvailablePort() {
     ServerSocket serverSocket = null;
@@ -23,12 +22,13 @@ public final class ServiceGovernUtil {
       serverSocket = new ServerSocket(0);
       return serverSocket.getLocalPort();
     } catch (IOException e) {
-
+      e.printStackTrace();
     } finally {
       if (serverSocket != null) {
         try {
           serverSocket.close();
         } catch (IOException e) {
+          e.printStackTrace();
           serverSocket = null;
         }
       }

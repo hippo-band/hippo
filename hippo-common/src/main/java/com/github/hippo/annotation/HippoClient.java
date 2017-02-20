@@ -20,15 +20,13 @@ import java.lang.annotation.Target;
 public @interface HippoClient {
   /**
    * 超时时间,默认5000毫秒
-   * 
-   * @return
+   * @return 超时时间
    */
   int timeout() default 5000;
 
   /**
    * 超时失败重试次数,默认不重试
-   * 
-   * @return
+   * @return 超时后重试次数
    */
   int retryTimes() default 0;
 }
