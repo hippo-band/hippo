@@ -5,10 +5,11 @@ package com.github.hippo.exception;
  *
  */
 public class HippoServiceUnavailableException extends HippoRuntimeException {
+
   /**
    * 
    */
-  private static final long serialVersionUID = -405702673172003011L;
+  private static final long serialVersionUID = 7403104150861003156L;
 
   public HippoServiceUnavailableException(String msg) {
     super(msg);
