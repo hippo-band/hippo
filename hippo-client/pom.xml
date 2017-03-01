@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-client-with-eureka</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -13,8 +13,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<hippo-common-version>0.0.1</hippo-common-version>
-		<hippo-serviceGoven-version>0.0.1</hippo-serviceGoven-version>
+		<hippo-common-version>1.0.0</hippo-common-version>
+		<hippo-serviceGoven-version>1.0.0</hippo-serviceGoven-version>
 	</properties>
 
 	<licenses>
@@ -44,6 +44,7 @@
 				<artifactId>hippo-common</artifactId>
 				<version>${hippo-common-version}</version>
 			</dependency>
+			
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-serviceGoven</artifactId>
@@ -54,16 +55,6 @@
 				<artifactId>junit</artifactId>
 				<version>3.8.1</version>
 				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.netflix.hystrix</groupId>
-				<artifactId>hystrix-core</artifactId>
-				<version>1.5.8</version>
-			</dependency>
-			<dependency>
-				<groupId>com.netflix.hystrix</groupId>
-				<artifactId>hystrix-metrics-event-stream</artifactId>
-				<version>1.5.8</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -86,14 +77,6 @@
 					<artifactId>rxjava-core</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.netflix.hystrix</groupId>
-			<artifactId>hystrix-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.netflix.hystrix</groupId>
-			<artifactId>hystrix-metrics-event-stream</artifactId>
 		</dependency>
 	</dependencies>
 

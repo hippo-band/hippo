@@ -17,6 +17,7 @@ import org.springframework.core.annotation.Order;
 
 import com.github.hippo.annotation.HippoClient;
 
+
 /**
  * 初始化有@RpcConsumer注解的类
  * 
