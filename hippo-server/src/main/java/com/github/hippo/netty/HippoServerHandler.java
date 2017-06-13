@@ -82,7 +82,8 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   }
 
   private Object rpcProcess(HippoRequest paras) throws InvocationTargetException {
-    Object serviceBean = HippoServiceImplCache.INSTANCE.getHandlerMap().get(paras.getClassName());
+    Object serviceBean =
+        HippoServiceImplCache.INSTANCE.getImplObjectMap().get(paras.getClassName());
     FastClass serviceFastClass = FastClass.create(serviceBean.getClass());
     FastMethod serviceFastMethod =
         serviceFastClass.getMethod(paras.getMethodName(), paras.getParameterTypes());

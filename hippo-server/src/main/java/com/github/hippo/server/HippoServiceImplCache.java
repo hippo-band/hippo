@@ -12,10 +12,10 @@ import java.util.Map;
 public enum HippoServiceImplCache {
 
   INSTANCE;
-  private Map<String, Object> handlerMap = new HashMap<>();
+  private Map<String, Object> implObjectMap = new HashMap<>();
 
-  public Map<String, Object> getHandlerMap() {
-    return handlerMap;
+  public Map<String,Object> getImplObjectMap() {
+    return implObjectMap;
   }
 
   /**
@@ -25,8 +25,11 @@ public enum HippoServiceImplCache {
    * @return 实现类
    */
   public Object getCacheBySimpleName(String simpleName) {
-    for (String key : handlerMap.keySet()) {
-      if (key.contains(simpleName)) return handlerMap.get(key);
+    for (String key : implObjectMap.keySet()) {
+      if (key.equalsIgnoreCase(simpleName) || key.equalsIgnoreCase(simpleName + "impl")
+          || key.equalsIgnoreCase(simpleName + "serviceimpl")) {
+        return implObjectMap.get(key);
+      }
     }
     return null;
   }

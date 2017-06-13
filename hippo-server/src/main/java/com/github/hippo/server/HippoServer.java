@@ -55,7 +55,7 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
       for (Object serviceBean : serviceBeanMap.values()) {
         String interfaceName =
             serviceBean.getClass().getAnnotation(HippoServiceImpl.class).value().getName();
-        HippoServiceImplCache.INSTANCE.getHandlerMap().put(interfaceName, serviceBean);
+        HippoServiceImplCache.INSTANCE.getImplObjectMap().put(interfaceName, serviceBean);
         Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
         for (Class<?> class1 : interfaces) {
           HippoService annotation = class1.getAnnotation(HippoService.class);
