@@ -17,7 +17,6 @@ import org.springframework.core.annotation.Order;
 
 import com.github.hippo.annotation.HippoClient;
 
-
 /**
  * 初始化有@RpcConsumer注解的类
  * 
@@ -27,52 +26,60 @@ import com.github.hippo.annotation.HippoClient;
 @Configuration
 @Order(1)
 public class HippoClientInit implements ApplicationContextAware {
-  private Map<String, Object> rpcConsumerMap = new HashMap<>();
-  @Autowired
-  private HippoProxy hippoProxy;
 
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {}
+	private static ApplicationContext applicationContext;
 
-  @Bean
-  public BeanPostProcessor beanPostProcessor() {
-    return new BeanPostProcessor() {
-      @Override
-      public Object postProcessBeforeInitialization(Object bean, String beanName)
-          throws BeansException {
-        Class<?> objClz = bean.getClass();
-        if (AopUtils.isAopProxy(bean)) {
-          objClz = AopUtils.getTargetClass(bean);
-        }
-        for (Field field : objClz.getDeclaredFields()) {
-          HippoClient hippoClient = field.getAnnotation(HippoClient.class);
-          if (hippoClient != null) {
-            @SuppressWarnings("rawtypes")
-            Class type = field.getType();
-            String key = type.getCanonicalName();
-            if (!rpcConsumerMap.containsKey(key)) {
-              rpcConsumerMap.put(key,
-                  hippoProxy.create(type, hippoClient.timeout(), hippoClient.retryTimes()));
-            }
-            try {
-              field.setAccessible(true);
-              field.set(bean, rpcConsumerMap.get(key));
-              field.setAccessible(false);
-            } catch (Exception e) {
-              throw new BeanCreationException(beanName, e);
-            }
-          }
-        }
-        return bean;
-      }
+	private Map<String, Object> rpcConsumerMap = new HashMap<>();
+	@Autowired
+	private HippoProxy hippoProxy;
 
+	@SuppressWarnings("static-access")
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		  this.applicationContext = applicationContext;
+	}
 
-      @Override
-      public Object postProcessAfterInitialization(Object bean, String beanName)
-          throws BeansException {
-        return bean;
-      }
-    };
+	@Bean
+	public BeanPostProcessor beanPostProcessor() {
+		return new BeanPostProcessor() {
+			@Override
+			public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+				Class<?> objClz = bean.getClass();
+				if (AopUtils.isAopProxy(bean)) {
+					objClz = AopUtils.getTargetClass(bean);
+				}
+				for (Field field : objClz.getDeclaredFields()) {
+					HippoClient hippoClient = field.getAnnotation(HippoClient.class);
+					if (hippoClient != null) {
+						@SuppressWarnings("rawtypes")
+						Class type = field.getType();
+						String key = type.getCanonicalName();
+						if (!rpcConsumerMap.containsKey(key)) {
+							rpcConsumerMap.put(key, hippoProxy.create(type,hippoClient));
+						}
+						try {
+							field.setAccessible(true);
+							field.set(bean, rpcConsumerMap.get(key));
+							field.setAccessible(false);
+						} catch (Exception e) {
+							throw new BeanCreationException(beanName, e);
+						}
+					}
+				}
+				return bean;
+			}
 
-  }
+			@Override
+			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+				return bean;
+			}
+		};
+
+	}
+
+	public static ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+	
+	
 }
