@@ -19,7 +19,7 @@ import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.exception.HippoRequestTypeNotExistException;
 import com.github.hippo.server.HippoServiceImplCache;
-import com.github.hippo.util.GsonConvertUtils;
+import com.github.hippo.util.FastJsonConvertUtils;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -101,7 +101,6 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
    * @return
    * @throws Exception
    */
-  @SuppressWarnings("unchecked")
   private Object apiProcess(HippoRequest paras) throws Exception {/* 先不管重载 不管缓存 */
     Object serviceBean = HippoServiceImplCache.INSTANCE.getCacheBySimpleName(paras.getClassName());
     Class<?> serviceBeanClass = serviceBean.getClass();
@@ -116,11 +115,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       Map<String, Object> map;
       if (objects != null && objects.length == 1) {
         // 如果是json统一转成map处理
-        if (objects[0] instanceof String) {
-          map = GsonConvertUtils.jsonToMap((String) objects[0]);
-        } else {
-          map = (Map<String, Object>) objects[0];
-        }
+        map = FastJsonConvertUtils.jsonToMap((String) objects[0]);
       } else {
         map = new HashMap<>();
       }
@@ -133,11 +128,10 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
         requestDto = new Object[1];
         // 非自定义dto就是java原生类了
         if (isJavaClass(parameterType)) {
-          requestDto[0] = GsonConvertUtils
-              .cleanseToObjectClass(map.get(method.getParameters()[0].getName()), parameterType);
+          requestDto[0] = map.get(method.getParameters()[0].getName());
         } else {
-          requestDto[0] =
-              GsonConvertUtils.cleanseToObjectClass(paras.getParameters()[0], parameterType);
+          requestDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) paras.getParameters()[0],
+              parameterType);
         }
       }
       // 多参
@@ -148,13 +142,12 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
         int index = 0;
         for (Parameter parameter : parameters) {
           paramName = parameter.getName();
-          requestDto[index] =
-              GsonConvertUtils.cleanseToObjectClass(map.get(paramName), parameter.getType());
+          requestDto[index] = map.get(paramName);
           index++;
         }
       }
       // 拿到返回
-      return GsonConvertUtils.cleanseToObject(method.invoke(serviceBean, requestDto));
+      return FastJsonConvertUtils.cleanseToObject(method.invoke(serviceBean, requestDto));
     }
     throw new NoSuchMethodException(paras.getMethodName());
   }
