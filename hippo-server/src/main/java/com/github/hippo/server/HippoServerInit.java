@@ -21,6 +21,7 @@ import com.github.hippo.bean.HippoDecoder;
 import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.netty.HippoServerHandler;
 
@@ -41,8 +42,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 @Component
 @Order
-public class HippoServer implements ApplicationContextAware, InitializingBean {
-  private static final Logger LOG = LoggerFactory.getLogger(HippoServer.class);
+public class HippoServerInit implements ApplicationContextAware, InitializingBean {
+  private static final Logger LOG = LoggerFactory.getLogger(HippoServerInit.class);
   @Autowired
   private ServiceGovern serviceGovern;
 
@@ -51,11 +52,21 @@ public class HippoServer implements ApplicationContextAware, InitializingBean {
   @Override
   public void setApplicationContext(ApplicationContext ctx) throws BeansException {
     Map<String, Object> serviceBeanMap = ctx.getBeansWithAnnotation(HippoServiceImpl.class);
+    Map<String, Object> implObjectMap = HippoServiceImplCache.INSTANCE.getImplObjectMap();
     if (MapUtils.isNotEmpty(serviceBeanMap)) {
       for (Object serviceBean : serviceBeanMap.values()) {
-        String interfaceName =
-            serviceBean.getClass().getAnnotation(HippoServiceImpl.class).value().getName();
-        HippoServiceImplCache.INSTANCE.getImplObjectMap().put(interfaceName, serviceBean);
+        Class<? extends Object> value =
+            serviceBean.getClass().getAnnotation(HippoServiceImpl.class).value();
+        // simpleName 提供apiProcess使用
+        String simpleName = value.getSimpleName();
+        // 全限定名提供给rpcProcess使用
+        String name = value.getName();
+
+        if (implObjectMap.containsKey(name)) {
+          throw new HippoServiceException(
+              "接口[" + simpleName + "]已存在。[" + name + "],hippo不支持不同包名但接口名相同,请重命名当前接口名");
+        }
+        implObjectMap.put(name, serviceBean);
         Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
         for (Class<?> class1 : interfaces) {
           HippoService annotation = class1.getAnnotation(HippoService.class);

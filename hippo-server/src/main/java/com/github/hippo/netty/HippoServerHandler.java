@@ -2,6 +2,9 @@ package com.github.hippo.netty;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,7 +46,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
     response.setServiceName(request.getServiceName());
     HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
     if (hippoRequestEnum != HippoRequestEnum.PING) {
-      LOGGER.info("hippo in param:" + request.toString());
+      LOGGER.info("hippo in param:{}", request);
     }
     try {
       ChainThreadLocal.INSTANCE.setChainId(request.getChainId());
@@ -63,6 +66,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
         response.setRequestId("-99");
       }
     } catch (Exception e1) {
+      LOGGER.error("handle error:" + request, e1);
       if (e1 instanceof InvocationTargetException) {
         response.setThrowable(e1.getCause());
       } else {
@@ -74,8 +78,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
     }
     ChainThreadLocal.INSTANCE.clearTL();
     if (hippoRequestEnum != HippoRequestEnum.PING) {
-      LOGGER.info("hippo out result:" + response.toString() + ",耗时:"
-          + (System.currentTimeMillis() - start) + "毫秒");
+      LOGGER.info("hippo out result:{},耗时:{}毫秒", response, System.currentTimeMillis() - start);
     }
 
     ctx.writeAndFlush(response);
@@ -90,28 +93,68 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
     return serviceFastMethod.invoke(serviceBean, paras.getParameters());
   }
 
+  /**
+   * apiProcess 不可能有2个Dto的接口,但是可能有多个基础类型 test(User user,Address add)//不会有这种情况,有也不支持 test(String
+   * userName,String pwd)//会有
+   * 
+   * @param paras
+   * @return
+   * @throws Exception
+   */
+  @SuppressWarnings("unchecked")
   private Object apiProcess(HippoRequest paras) throws Exception {/* 先不管重载 不管缓存 */
-    if (paras.getParameters() != null && paras.getParameters().length > 1)
-      throw new IllegalAccessException("apiProcess HippoRequest parameters err");
     Object serviceBean = HippoServiceImplCache.INSTANCE.getCacheBySimpleName(paras.getClassName());
     Class<?> serviceBeanClass = serviceBean.getClass();
     Method[] methods = serviceBeanClass.getDeclaredMethods();
-    Object responseDto = null;
+    Object[] requestDto = null;
     for (Method method : methods) {
       if (!method.getName().equals(paras.getMethodName())) {
         continue;
       }
+      Object[] objects = paras.getParameters();
+
+      Map<String, Object> map;
+      if (objects != null && objects.length == 1) {
+        // 如果是json统一转成map处理
+        if (objects[0] instanceof String) {
+          map = GsonConvertUtils.jsonToMap((String) objects[0]);
+        } else {
+          map = (Map<String, Object>) objects[0];
+        }
+      } else {
+        map = new HashMap<>();
+      }
       Class<?>[] parameterTypes = method.getParameterTypes();
       if (parameterTypes.length == 0) {// 无参数
-        responseDto = method.invoke(serviceBean);
-      } else if (parameterTypes.length == 1) {// 有参
+        requestDto = null;
+      } else if (parameterTypes.length == 1) {// 一个参数(是否是Dto)
         Class<?> parameterType = parameterTypes[0];
-        Object requestDto =
-            GsonConvertUtils.cleanseToObjectClass(paras.getParameters()[0], parameterType);
-        responseDto = method.invoke(serviceBean, requestDto);
+
+        requestDto = new Object[1];
+        // 非自定义dto就是java原生类了
+        if (isJavaClass(parameterType)) {
+          requestDto[0] = GsonConvertUtils
+              .cleanseToObjectClass(map.get(method.getParameters()[0].getName()), parameterType);
+        } else {
+          requestDto[0] =
+              GsonConvertUtils.cleanseToObjectClass(paras.getParameters()[0], parameterType);
+        }
+      }
+      // 多参
+      else {
+        Parameter[] parameters = method.getParameters();
+        requestDto = new Object[parameters.length];
+        String paramName;
+        int index = 0;
+        for (Parameter parameter : parameters) {
+          paramName = parameter.getName();
+          requestDto[index] =
+              GsonConvertUtils.cleanseToObjectClass(map.get(paramName), parameter.getType());
+          index++;
+        }
       }
       // 拿到返回
-      return GsonConvertUtils.cleanseToObject(responseDto);
+      return GsonConvertUtils.cleanseToObject(method.invoke(serviceBean, requestDto));
     }
     throw new NoSuchMethodException(paras.getMethodName());
   }
@@ -126,5 +169,9 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, HippoRequest request) throws Exception {
     pool.execute(() -> handle(ctx, request));
+  }
+
+  private boolean isJavaClass(Class<?> clz) {
+    return clz != null && clz.getClassLoader() == null;
   }
 }

@@ -3,6 +3,8 @@ package com.github.hippo.server;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * 缓存了具体SOA实现类
  * 
@@ -14,7 +16,7 @@ public enum HippoServiceImplCache {
   INSTANCE;
   private Map<String, Object> implObjectMap = new HashMap<>();
 
-  public Map<String,Object> getImplObjectMap() {
+  public Map<String, Object> getImplObjectMap() {
     return implObjectMap;
   }
 
@@ -25,9 +27,12 @@ public enum HippoServiceImplCache {
    * @return 实现类
    */
   public Object getCacheBySimpleName(String simpleName) {
+    if (StringUtils.isBlank(simpleName)) {
+      return null;
+    }
     for (String key : implObjectMap.keySet()) {
-      if (key.equalsIgnoreCase(simpleName) || key.equalsIgnoreCase(simpleName + "impl")
-          || key.equalsIgnoreCase(simpleName + "serviceimpl")) {
+      String newKey = key.substring(key.lastIndexOf('.') + 1);
+      if (newKey.equalsIgnoreCase(simpleName)) {
         return implObjectMap.get(key);
       }
     }

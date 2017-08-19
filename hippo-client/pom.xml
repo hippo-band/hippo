@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-client-with-eureka</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -13,7 +13,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<hippo-common-version>1.0.0</hippo-common-version>
+		<hippo-common-version>1.0.1</hippo-common-version>
 		<hippo-serviceGoven-version>1.0.0</hippo-serviceGoven-version>
 	</properties>
 

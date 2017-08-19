@@ -33,10 +33,9 @@ public class HippoClientInit implements ApplicationContextAware {
 	@Autowired
 	private HippoProxy hippoProxy;
 
-	@SuppressWarnings("static-access")
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		  this.applicationContext = applicationContext;
+		  HippoClientInit.applicationContext = applicationContext;
 	}
 
 	@Bean
