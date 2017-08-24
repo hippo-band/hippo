@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.github.hippo.annotation.HippoClient;
 import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
+import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;
@@ -46,11 +47,17 @@ public class HippoProxy {
               new HippoCommand(request, hippoClient.timeout(), hippoClient.retryTimes(),
                   hippoClient.isCircuitBreaker(), hippoClient.semaphoreMaxConcurrentRequests(),
                   hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled(), serviceGovern);
+          HippoResponse hippoResponse;
           if (hippoClient.isUseHystrix()) {
-            return hippoCommand.execute();
+            hippoResponse = (HippoResponse) hippoCommand.execute();
           } else {
-            return hippoCommand.getHippoResponse(request, hippoClient.timeout(),
+            hippoResponse = hippoCommand.getHippoResponse(request, hippoClient.timeout(),
                 hippoClient.retryTimes());
+          }
+          if (hippoResponse.isError()) {
+            throw hippoResponse.getThrowable();
+          } else {
+            return hippoResponse.getResult();
           }
         });
   }
@@ -76,7 +83,12 @@ public class HippoProxy {
     HippoCommand hippoCommand = new HippoCommand(request, timeout, retryTimes, isCircuitBreaker,
         semaphoreMaxConcurrentRequests == 0 ? 10 : semaphoreMaxConcurrentRequests, hippoFailPolicy,
         fallbackEnable, serviceGovern);
-    return hippoCommand.execute();
+    HippoResponse hippoResponse = (HippoResponse) hippoCommand.execute();
+    if (hippoResponse.isError()) {
+      throw hippoResponse.getThrowable();
+    } else {
+      return hippoResponse.getResult();
+    }
   }
 
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter)

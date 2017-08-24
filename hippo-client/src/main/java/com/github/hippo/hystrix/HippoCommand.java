@@ -78,21 +78,21 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   @Override
   protected Object run() throws Exception {
-
     try {
       return getHippoResponse(hippoRequest, timeOut, retryTimes);
-    } catch (Throwable e) {
-      throw (Exception) e;
+    } catch (Exception e) {
+      throw e;
     }
   }
+
 
   @Override
   protected Object getFallback() {
     return hippoFailPolicy.failCallBack(hippoRequest.getServiceName());
   }
 
-  public Object getHippoResponse(HippoRequest request, int timeout, int retryTimes)
-      throws Throwable {
+  public HippoResponse getHippoResponse(HippoRequest request, int timeout, int retryTimes)
+      throws Exception {
 
     // 重试次数不能大于5次
     int index = retryTimes;
@@ -100,14 +100,11 @@ public class HippoCommand extends HystrixCommand<Object> {
       index = 5;
     }
     HippoResponse result = getResult(request, timeout);
-    if (result.isError()) {
-      if (result.getThrowable() instanceof HippoReadTimeoutException && index > 0) {
-        return getHippoResponse(request, timeout, retryTimes - 1);
-      } else {
-        throw result.getThrowable();
-      }
+    if (result.isError() && result.getThrowable() instanceof HippoReadTimeoutException
+        && index > 0) {
+      return getHippoResponse(request, timeout, retryTimes - 1);
     }
-    return result.getResult();
+    return result;
   }
 
   private HippoResponse getResult(HippoRequest request, int timeout) throws Exception {
