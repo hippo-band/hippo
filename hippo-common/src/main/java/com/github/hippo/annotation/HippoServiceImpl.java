@@ -19,7 +19,9 @@ import org.springframework.stereotype.Component;
 public @interface HippoServiceImpl {
   /**
    * 接口类class
+   * 最新修改是不用传接口.class的,为了兼容老版本+个Default值并声明过期,在未来的某个版本就去掉
    * @return 接口class
    */
-  Class<? extends Object> value();
+  @Deprecated
+  Class<? extends Object> value() default Void.class;
 }

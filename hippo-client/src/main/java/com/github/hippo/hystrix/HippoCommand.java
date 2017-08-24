@@ -11,7 +11,6 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.exception.HystrixBadRequestException;
 
 /**
  * hystrix
@@ -34,7 +33,8 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   public HippoCommand(HippoRequest hippoRequest, int timeOut, int retryTimes,
       boolean isCircuitBreaker, int semaphoreMaxConcurrentRequests, Class<?> downgradeStrategy,
-      ServiceGovern serviceGovern) throws InstantiationException, IllegalAccessException {
+      boolean fallbackEnabled, ServiceGovern serviceGovern)
+      throws InstantiationException, IllegalAccessException {
 
     // 默认隔离策略是线程 也可以是信号量,现在采用的是信号量的模式
     // 信号量隔离是个限流的策略
@@ -45,29 +45,34 @@ public class HippoCommand extends HystrixCommand<Object> {
             .withExecutionIsolationStrategy(
                 HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE)
             .withExecutionIsolationSemaphoreMaxConcurrentRequests(semaphoreMaxConcurrentRequests)
-            .withCircuitBreakerEnabled(isCircuitBreaker).withExecutionTimeoutEnabled(false)));
+            .withFallbackEnabled(fallbackEnabled).withCircuitBreakerEnabled(isCircuitBreaker)
+            .withExecutionTimeoutEnabled(false)));
 
     this.hippoRequest = hippoRequest;
     this.timeOut = timeOut;
     this.retryTimes = retryTimes;
     this.serviceGovern = serviceGovern;
-    init(downgradeStrategy);
-
+    if (fallbackEnabled) {
+      init(downgradeStrategy);
+    }
   }
 
   private void init(Class<?> downgradeStrategy)
       throws InstantiationException, IllegalAccessException {
-
-    if (HippoFailPolicy.class.isAssignableFrom(downgradeStrategy)) {
-      // 先从spring容器里面拿，如果没有，则new
-      try {
-        Object bean = HippoClientInit.getApplicationContext().getBean(downgradeStrategy);
-        hippoFailPolicy = (HippoFailPolicy<?>) bean;
-      } catch (Exception e) {
-        hippoFailPolicy = (HippoFailPolicy<?>) downgradeStrategy.newInstance();
-      }
-    } else {
+    if (downgradeStrategy == null) {
       hippoFailPolicy = new HippoFailPolicyDefaultImpl();
+    } else {
+      if (HippoFailPolicy.class.isAssignableFrom(downgradeStrategy)) {
+        // 先从spring容器里面拿，如果没有，则new
+        try {
+          Object bean = HippoClientInit.getApplicationContext().getBean(downgradeStrategy);
+          hippoFailPolicy = (HippoFailPolicy<?>) bean;
+        } catch (Exception e) {
+          hippoFailPolicy = (HippoFailPolicy<?>) downgradeStrategy.newInstance();
+        }
+      } else {
+        hippoFailPolicy = new HippoFailPolicyDefaultImpl();
+      }
     }
   }
 
@@ -77,10 +82,8 @@ public class HippoCommand extends HystrixCommand<Object> {
     try {
       return getHippoResponse(hippoRequest, timeOut, retryTimes);
     } catch (Throwable e) {
-      // 业务异常只有包装成HystrixBadRequestException 才不会触发getFallback();
-      throw new HystrixBadRequestException("call service error", e);
+      throw (Exception) e;
     }
-
   }
 
   @Override

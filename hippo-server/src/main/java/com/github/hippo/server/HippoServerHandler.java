@@ -1,8 +1,7 @@
-package com.github.hippo.netty;
+package com.github.hippo.server;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -12,13 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cglib.reflect.FastClass;
 import org.springframework.cglib.reflect.FastMethod;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.exception.HippoRequestTypeNotExistException;
-import com.github.hippo.server.HippoServiceImplCache;
 import com.github.hippo.util.FastJsonConvertUtils;
 
 import io.netty.channel.ChannelHandler.Sharable;
@@ -85,8 +84,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
   }
 
   private Object rpcProcess(HippoRequest paras) throws InvocationTargetException {
-    Object serviceBean =
-        HippoServiceImplCache.INSTANCE.getImplObjectMap().get(paras.getClassName());
+    Object serviceBean = HippoServiceCache.INSTANCE.getImplObjectMap().get(paras.getClassName());
     FastClass serviceFastClass = FastClass.create(serviceBean.getClass());
     FastMethod serviceFastMethod =
         serviceFastClass.getMethod(paras.getMethodName(), paras.getParameterTypes());
@@ -101,17 +99,27 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
    * @return
    * @throws Exception
    */
-  private Object apiProcess(HippoRequest paras) throws Exception {/* 先不管重载 不管缓存 */
-    Object serviceBean = HippoServiceImplCache.INSTANCE.getCacheBySimpleName(paras.getClassName());
-    Class<?> serviceBeanClass = serviceBean.getClass();
-    Method[] methods = serviceBeanClass.getDeclaredMethods();
-    Object[] requestDto = null;
+  private Object apiProcess(HippoRequest paras) throws Exception {/* 先不管重载 */
+
+    Method[] methods =
+        HippoServiceCache.INSTANCE.getInterfaceMap().get(paras.getClassName()).getDeclaredMethods();
+    // 接口定义的method
     for (Method method : methods) {
       if (!method.getName().equals(paras.getMethodName())) {
         continue;
       }
-      Object[] objects = paras.getParameters();
+      Object[] paramDto = null;
 
+      Class<?>[] parameterTypes = method.getParameterTypes();
+
+      Object serviceBean = HippoServiceCache.INSTANCE.getImplObjectMap().get(paras.getClassName());
+      FastClass serviceFastClass = FastClass.create(serviceBean.getClass());
+      FastMethod serviceFastMethod = serviceFastClass.getMethod(method.getName(), parameterTypes);
+
+      LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+      String[] parameterNames = u.getParameterNames(serviceFastMethod.getJavaMethod());
+
+      Object[] objects = paras.getParameters();
       Map<String, Object> map;
       if (objects != null && objects.length == 1) {
         // 如果是json统一转成map处理
@@ -119,35 +127,32 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       } else {
         map = new HashMap<>();
       }
-      Class<?>[] parameterTypes = method.getParameterTypes();
-      if (parameterTypes.length == 0) {// 无参数
-        requestDto = null;
+
+      if (parameterTypes.length == 0 || objects == null) {// 无参数
+        paramDto = null;
       } else if (parameterTypes.length == 1) {// 一个参数(是否是Dto)
         Class<?> parameterType = parameterTypes[0];
-
-        requestDto = new Object[1];
+        paramDto = new Object[1];
         // 非自定义dto就是java原生类了
         if (isJavaClass(parameterType)) {
-          requestDto[0] = map.get(method.getParameters()[0].getName());
+          paramDto[0] = map.get(parameterNames[0]);
         } else {
-          requestDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) paras.getParameters()[0],
-              parameterType);
+          paramDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) objects[0], parameterType);
         }
       }
       // 多参
       else {
-        Parameter[] parameters = method.getParameters();
-        requestDto = new Object[parameters.length];
-        String paramName;
-        int index = 0;
-        for (Parameter parameter : parameters) {
-          paramName = parameter.getName();
-          requestDto[index] = map.get(paramName);
-          index++;
+        if (parameterNames.length != 0) {
+          paramDto = new Object[parameterNames.length];
+          int index = 0;
+          for (String parameter : parameterNames) {
+            paramDto[index] = map.get(parameter);
+            index++;
+          }
         }
       }
       // 拿到返回
-      return FastJsonConvertUtils.cleanseToObject(method.invoke(serviceBean, requestDto));
+      return FastJsonConvertUtils.cleanseToObject(serviceFastMethod.invoke(serviceBean, paramDto));
     }
     throw new NoSuchMethodException(paras.getMethodName());
   }

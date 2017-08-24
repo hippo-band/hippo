@@ -23,7 +23,6 @@ import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.govern.ServiceGovern;
-import com.github.hippo.netty.HippoServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -52,28 +51,31 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
   @Override
   public void setApplicationContext(ApplicationContext ctx) throws BeansException {
     Map<String, Object> serviceBeanMap = ctx.getBeansWithAnnotation(HippoServiceImpl.class);
-    Map<String, Object> implObjectMap = HippoServiceImplCache.INSTANCE.getImplObjectMap();
-    if (MapUtils.isNotEmpty(serviceBeanMap)) {
-      for (Object serviceBean : serviceBeanMap.values()) {
-        Class<? extends Object> value =
-            serviceBean.getClass().getAnnotation(HippoServiceImpl.class).value();
+    if (MapUtils.isEmpty(serviceBeanMap)) {
+      return;
+    }
+    Map<String, Object> implObjectMap = HippoServiceCache.INSTANCE.getImplObjectMap();
+    Map<String, Class<?>> interfaceMap = HippoServiceCache.INSTANCE.getInterfaceMap();
+    for (Object serviceBean : serviceBeanMap.values()) {
+      Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
+      for (Class<?> class1 : interfaces) {
+        HippoService annotation = class1.getAnnotation(HippoService.class);
+        if (annotation == null) {
+          continue;
+        }
+        // 如果impl实现多个接口,那只需要找到@HippoService的接口即可
         // simpleName 提供apiProcess使用
-        String simpleName = value.getSimpleName();
+        String simpleName = class1.getSimpleName();
         // 全限定名提供给rpcProcess使用
-        String name = value.getName();
-
-        if (implObjectMap.containsKey(name)) {
+        String name = class1.getName();
+        if (implObjectMap.containsKey(simpleName)) {
           throw new HippoServiceException(
               "接口[" + simpleName + "]已存在。[" + name + "],hippo不支持不同包名但接口名相同,请重命名当前接口名");
         }
+        implObjectMap.put(simpleName, serviceBean);
         implObjectMap.put(name, serviceBean);
-        Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
-        for (Class<?> class1 : interfaces) {
-          HippoService annotation = class1.getAnnotation(HippoService.class);
-          if (annotation != null) {
-            registryNames.add(annotation.serviceName());
-          }
-        }
+        interfaceMap.put(simpleName, class1);
+        registryNames.add(annotation.serviceName());
       }
     }
   }
