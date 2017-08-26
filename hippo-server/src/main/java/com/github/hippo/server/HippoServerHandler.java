@@ -120,13 +120,6 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       String[] parameterNames = u.getParameterNames(serviceFastMethod.getJavaMethod());
 
       Object[] objects = paras.getParameters();
-      Map<String, Object> map;
-      if (objects != null && objects.length == 1) {
-        // 如果是json统一转成map处理
-        map = FastJsonConvertUtils.jsonToMap((String) objects[0]);
-      } else {
-        map = new HashMap<>();
-      }
 
       if (parameterTypes.length == 0 || objects == null) {// 无参数
         paramDto = null;
@@ -135,7 +128,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
         paramDto = new Object[1];
         // 非自定义dto就是java原生类了
         if (isJavaClass(parameterType)) {
-          paramDto[0] = map.get(parameterNames[0]);
+          paramDto[0] = getMap(objects).get(parameterNames[0]);
         } else {
           paramDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) objects[0], parameterType);
         }
@@ -145,6 +138,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
         if (parameterNames.length != 0) {
           paramDto = new Object[parameterNames.length];
           int index = 0;
+          Map<String, Object> map = getMap(objects);
           for (String parameter : parameterNames) {
             paramDto[index] = map.get(parameter);
             index++;
@@ -155,6 +149,14 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
       return FastJsonConvertUtils.cleanseToObject(serviceFastMethod.invoke(serviceBean, paramDto));
     }
     throw new NoSuchMethodException(paras.getMethodName());
+  }
+
+  private Map<String, Object> getMap(Object[] objects) {
+    if (objects.length == 1) {
+      return FastJsonConvertUtils.jsonToMap((String) objects[0]);
+    } else {
+      return new HashMap<>();
+    }
   }
 
   @Override
