@@ -1,6 +1,8 @@
 package com.github.hippo.hystrix;
 
+import com.github.hippo.bean.HippoResponse;
+
 public interface HippoFailPolicy<T> {
 
-	  T failCallBack(String serviceName);
+	  T failCallBack(HippoResponse hippoResponse);
 }

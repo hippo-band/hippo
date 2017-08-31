@@ -23,6 +23,9 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   private HippoRequest hippoRequest;
 
+
+  private HippoResponse hippoResponse;
+
   private int timeOut;
 
   private int retryTimes;
@@ -59,36 +62,35 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   private void init(Class<?> downgradeStrategy)
       throws InstantiationException, IllegalAccessException {
-    if (downgradeStrategy == null) {
-      hippoFailPolicy = new HippoFailPolicyDefaultImpl();
-    } else {
-      if (HippoFailPolicy.class.isAssignableFrom(downgradeStrategy)) {
-        // 先从spring容器里面拿，如果没有，则new
-        try {
-          Object bean = HippoClientInit.getApplicationContext().getBean(downgradeStrategy);
-          hippoFailPolicy = (HippoFailPolicy<?>) bean;
-        } catch (Exception e) {
-          hippoFailPolicy = (HippoFailPolicy<?>) downgradeStrategy.newInstance();
-        }
-      } else {
-        hippoFailPolicy = new HippoFailPolicyDefaultImpl();
+    if (HippoFailPolicy.class.isAssignableFrom(downgradeStrategy)) {
+      // 先从spring容器里面拿，如果没有，则new
+      try {
+        Object bean = HippoClientInit.getApplicationContext().getBean(downgradeStrategy);
+        hippoFailPolicy = (HippoFailPolicy<?>) bean;
+      } catch (Exception e) {
+        hippoFailPolicy = (HippoFailPolicy<?>) downgradeStrategy.newInstance();
       }
+    } else {
+      hippoFailPolicy = new HippoFailPolicyDefaultImpl();
     }
   }
 
   @Override
   protected Object run() throws Exception {
-    try {
-      return getHippoResponse(hippoRequest, timeOut, retryTimes);
-    } catch (Exception e) {
-      throw e;
+    HippoResponse result = getHippoResponse(hippoRequest, timeOut, retryTimes);
+    // 超时异常记录到熔断器里
+    // 看看后续有没必要加上排他异常(比如如果是xxx异常也可以不触发fallback类似HystrixBadRequestException)
+    if (result.isError() && result.getThrowable() instanceof HippoReadTimeoutException) {
+      hippoResponse = result;
+      throw (HippoReadTimeoutException) result.getThrowable();
     }
+    return result;
   }
 
 
   @Override
   protected Object getFallback() {
-    return hippoFailPolicy.failCallBack(hippoRequest.getServiceName());
+    return hippoFailPolicy.failCallBack(hippoResponse);
   }
 
   public HippoResponse getHippoResponse(HippoRequest request, int timeout, int retryTimes)
