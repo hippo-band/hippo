@@ -115,7 +115,7 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
         return;
       }
       serviceNames.forEach(this::conntectionProcess);
-    }, 30, 20, TimeUnit.SECONDS);
+    }, 10, 10, TimeUnit.SECONDS);
   }
 
   private void conntectionProcess(String serviceName) {
@@ -137,20 +137,27 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
         LOGGER.warn("[%s]服务参数异常.host=%s,port=%s", serviceName, host, port);
         continue;
       }
+      createHippoHandler(serviceName, host, port);
+
+    }
+  }
+
+  static void createHippoHandler(String serviceName, String host, int port) {
+    synchronized (serviceName) {
       if (checkServiceExist(serviceName, host, port)) {
-        continue;
+        return;
       }
       try {
         HippoClientBootstrap bootstrap = new HippoClientBootstrap(serviceName, host, port);
         HippoClientBootstrapMap.put(serviceName, host, port, bootstrap);
       } catch (Exception e) {
         LOGGER.error(e.getMessage(), e);
-        continue;
       }
     }
+
   }
 
-  private boolean checkServiceExist(String serviceName, String host, int port) {
+  private static boolean checkServiceExist(String serviceName, String host, int port) {
     if (!HippoClientBootstrapMap.containsKey(serviceName)) {
       return false;
     }

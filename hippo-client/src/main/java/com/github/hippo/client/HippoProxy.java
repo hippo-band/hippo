@@ -1,10 +1,8 @@
 package com.github.hippo.client;
 
 import java.lang.reflect.Proxy;
-import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +15,6 @@ import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.hystrix.HippoCommand;
-import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoClientBootstrapMap;
 
 /**
@@ -82,23 +79,9 @@ public class HippoProxy {
     if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
       return;
     }
-    if (checkServiceExist(serviceName, host, port)) {
-      return;
-    }
-    HippoClientBootstrap bootstrap = new HippoClientBootstrap(serviceName, host, port);
-    HippoClientBootstrapMap.put(serviceName, host, port, bootstrap);
+    HippoClientInit.createHippoHandler(serviceName, host, port);
   }
 
-  private boolean checkServiceExist(String serviceName, String host, int port) {
-    if (!HippoClientBootstrapMap.containsKey(serviceName)) {
-      return false;
-    }
-    Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
-    if (map == null || CollectionUtils.isEmpty(map.values())) {
-      return false;
-    }
-    return !HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
-  }
 
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter, int timeout,
       int retryTimes, boolean isCircuitBreaker, int semaphoreMaxConcurrentRequests,

@@ -20,9 +20,9 @@ public final class HippoClientBootstrapMap {
     if (!BOOTSTRAPMAP.containsKey(serviceName)) {
       Map<String, HippoClientBootstrap> map = new ConcurrentHashMap<>();
       map.put(host + ":" + port, bootstrap);
-      BOOTSTRAPMAP.put(serviceName, map);
+      BOOTSTRAPMAP.putIfAbsent(serviceName, map);
     } else {
-      BOOTSTRAPMAP.get(serviceName).put(host + ":" + port, bootstrap);
+      BOOTSTRAPMAP.get(serviceName).putIfAbsent(host + ":" + port, bootstrap);
     }
   }
 
