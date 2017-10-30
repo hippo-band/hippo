@@ -14,6 +14,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+/**
+ * client process handler
+ * @author sl
+ *
+ */
 public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
 
   private ConcurrentHashMap<String, HippoResultCallBack> callBackMap = new ConcurrentHashMap<>();
@@ -38,13 +43,6 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     this.channel = ctx.channel();
   }
 
-  /*
-   * 超时由具体线程自己控制 @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-   * throws Exception { LOGGER.error("netty client error", cause); // 读超时就不close了,保持长链接,不过这里可以+上计数
-   * if (cause instanceof ReadTimeoutException) { this.response = new HippoResponse();
-   * this.response.setError(true); this.response.setThrowable(cause); } else { //
-   * close会触发channelInactive方法 ctx.close(); } }
-   */
 
   @Override
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
