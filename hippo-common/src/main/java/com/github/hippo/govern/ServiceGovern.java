@@ -1,5 +1,7 @@
 package com.github.hippo.govern;
 
+import java.util.List;
+
 /**
  * 服务管理
  * 
@@ -23,5 +25,12 @@ public interface ServiceGovern {
    * @return ip:port
    */
   public String getServiceAddress(String serviceName);
+  
+  /**
+   * 获取serviceName所有的服务器地址ip:prot
+   * @param serviceName 注册服务名
+   * @return
+   */
+  public List<String>getServiceAddresses(String serviceName);
 
 }

@@ -5,7 +5,6 @@ import java.util.UUID;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
-import com.github.hippo.goven.serviceImpl.ServiceGovenImpl;
 import com.github.hippo.hystrix.HippoCommand;
 
 public class HippoHystrixCommandTest {
@@ -13,6 +12,13 @@ public class HippoHystrixCommandTest {
   public static void main(String[] args) throws InstantiationException, IllegalAccessException {
     HippoHystrixCommandTest hippoHystrixCommandTest = new HippoHystrixCommandTest();
     HippoCommand hippoCommand = hippoHystrixCommandTest.builderHippoCommand();
+    try {
+      
+      System.out.println(hippoCommand.execute());
+    } catch (Exception e) {
+      // TODO: handle exception
+    }
+    
     System.out.println(hippoCommand.execute());
   }
 
@@ -39,8 +45,7 @@ public class HippoHystrixCommandTest {
   }
 
   private HippoCommand builderHippoCommand() throws InstantiationException, IllegalAccessException {
-    return new HippoCommand(buildHippoRequest(), 3000, 1, true, 10, Void.class, false,
-        new ServiceGovenImpl());
+    return new HippoCommand(buildHippoRequest(), 3000, 1, true, 10, Void.class, false);
   }
 
 

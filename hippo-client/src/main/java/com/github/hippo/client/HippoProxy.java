@@ -1,8 +1,11 @@
 package com.github.hippo.client;
 
 import java.lang.reflect.Proxy;
+import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,8 @@ import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.hystrix.HippoCommand;
+import com.github.hippo.netty.HippoClientBootstrap;
+import com.github.hippo.netty.HippoClientBootstrapMap;
 
 /**
  * client代理类
@@ -46,8 +51,12 @@ public class HippoProxy {
           HippoCommand hippoCommand =
               new HippoCommand(request, hippoClient.timeout(), hippoClient.retryTimes(),
                   hippoClient.isCircuitBreaker(), hippoClient.semaphoreMaxConcurrentRequests(),
-                  hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled(), serviceGovern);
+                  hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled());
           HippoResponse hippoResponse;
+          // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
+          if (HippoClientBootstrapMap.get(serviceName) == null) {
+            conntectionOne(serviceName);
+          }
           if (hippoClient.isUseHystrix()) {
             hippoResponse = (HippoResponse) hippoCommand.execute();
           } else {
@@ -60,6 +69,35 @@ public class HippoProxy {
             return hippoResponse.getResult();
           }
         });
+  }
+
+  private void conntectionOne(String serviceName) throws Exception {
+    String serviceAddresse = serviceGovern.getServiceAddress(serviceName);
+    if (StringUtils.isBlank(serviceAddresse)) {
+      return;
+    }
+    String[] split = serviceAddresse.split(":");
+    String host = split[0];
+    int port = Integer.parseInt(split[1]);
+    if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
+      return;
+    }
+    if (checkServiceExist(serviceName, host, port)) {
+      return;
+    }
+    HippoClientBootstrap bootstrap = new HippoClientBootstrap(serviceName, host, port);
+    HippoClientBootstrapMap.put(serviceName, host, port, bootstrap);
+  }
+
+  private boolean checkServiceExist(String serviceName, String host, int port) {
+    if (!HippoClientBootstrapMap.containsKey(serviceName)) {
+      return false;
+    }
+    Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
+    if (map == null || CollectionUtils.isEmpty(map.values())) {
+      return false;
+    }
+    return !HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
   }
 
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter, int timeout,
@@ -82,7 +120,7 @@ public class HippoProxy {
 
     HippoCommand hippoCommand = new HippoCommand(request, timeout, retryTimes, isCircuitBreaker,
         semaphoreMaxConcurrentRequests == 0 ? 10 : semaphoreMaxConcurrentRequests, hippoFailPolicy,
-        fallbackEnable, serviceGovern);
+        fallbackEnable);
     HippoResponse hippoResponse = (HippoResponse) hippoCommand.execute();
     if (hippoResponse.isError()) {
       throw hippoResponse.getThrowable();

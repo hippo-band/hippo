@@ -20,10 +20,15 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   private String serviceName;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
+  private String host;
+  private int port;
 
-  public HippoRequestHandler(String serviceName, EventLoopGroup eventLoopGroup) {
+  public HippoRequestHandler(String serviceName, EventLoopGroup eventLoopGroup, String host,
+      int port) {
     this.serviceName = serviceName;
     this.eventLoopGroup = eventLoopGroup;
+    this.host = host;
+    this.port = port;
   }
 
 
@@ -85,7 +90,8 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       c.signal(response);
     });
     callBackMap.clear();
-    HippoClientBootstrapMap.remove(serviceName);
+
+    HippoClientBootstrapMap.remove(serviceName, host, port);
   }
 
   public void sendAsync(HippoResultCallBack hippoResultCallBack) {
