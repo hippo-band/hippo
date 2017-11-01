@@ -3,9 +3,6 @@ package com.github.hippo.client;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
 
-import com.github.hippo.callback.CallBackHelper;
-import com.github.hippo.callback.CallType;
-import com.github.hippo.callback.ICallBackBean;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +11,8 @@ import com.github.hippo.annotation.HippoClient;
 import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.callback.CallBackHelper;
+import com.github.hippo.callback.ICallBackBean;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;

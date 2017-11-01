@@ -1,7 +1,6 @@
 package com.github.hippo.bean;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import com.github.hippo.callback.CallType;
 import com.github.hippo.callback.ICallBack;
@@ -29,9 +28,9 @@ public class HippoRequest implements Serializable {
   private String methodName;
   private Class<?>[] parameterTypes;
   private Object[] parameters;
-  private String callType = CallType.SYNC;
-  private ICallBack iCallBack;
-  private int timeout;
+  private transient String callType = CallType.SYNC;
+  private transient ICallBack iCallBack;
+  private transient int timeout;
 
   
 

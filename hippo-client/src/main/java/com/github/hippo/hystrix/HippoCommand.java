@@ -119,7 +119,7 @@ public class HippoCommand extends HystrixCommand<Object> {
     }
     for (RemoteCallHandler remoteCallHandler : CallFactory.getCallHandleList()) {
       if(remoteCallHandler.canProcess(request.getCallType())) {
-         return remoteCallHandler.call(hippoClientBootstrap,hippoRequest);
+         return remoteCallHandler.call(hippoClientBootstrap,hippoRequest,timeout);
       }
     }
     throw new HippoRequestTypeNotExistException("没有符合的callType");
