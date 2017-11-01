@@ -1,17 +1,13 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.hippo.bean.HippoDecoder;
 import com.github.hippo.bean.HippoEncoder;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.exception.HippoServiceUnavailableException;
-import com.github.hippo.govern.ServiceGovern;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -27,48 +23,29 @@ import io.netty.handler.timeout.IdleStateHandler;
  * @author sl
  *
  */
-public class HippoClientBootstrap {
+public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HippoClientBootstrap.class);
 
   private String host;
   private int port;
-  private int timeout;
   private String serviceName;
-
-  private Bootstrap bootstrap = new Bootstrap();
-  private NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
   private HippoRequestHandler handler;
-  private ServiceGovern serviceGovern;
+  private AtomicLong invokeTimes = new AtomicLong(0);
 
 
-  public static HippoClientBootstrap getBootstrap(String serviceName, int timeout,
-      ServiceGovern serviceGovern) throws Exception {
 
-    if (!HippoClientBootstrapMap.containsKey(serviceName)) {
-      synchronized (HippoClientBootstrapMap.class) {
-        if (!HippoClientBootstrapMap.containsKey(serviceName)) {
-          HippoClientBootstrap hippoClientBootstrap =
-              new HippoClientBootstrap(serviceName, timeout, serviceGovern);
-          HippoClientBootstrapMap.put(serviceName, hippoClientBootstrap);
-        }
-      }
-    }
-    return HippoClientBootstrapMap.get(serviceName);
-  }
-
-  private HippoClientBootstrap(String serviceName, int timeout, ServiceGovern serviceGovern)
-      throws Exception {
+  public HippoClientBootstrap(String serviceName, String host, int port) throws Exception {
     this.serviceName = serviceName;
-    this.timeout = timeout;
-    this.serviceGovern = serviceGovern;
-    //init();
+    this.host = host;
+    this.port = port;
+    init();
   }
 
   private void init() {
-    initHostAndPort();
     try {
-      handler = new HippoRequestHandler(this.serviceName, this.eventLoopGroup);
+      Bootstrap bootstrap = new Bootstrap();
+      NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
+      handler = new HippoRequestHandler(this.serviceName, eventLoopGroup, this.host, this.port);
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);
       bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -82,27 +59,13 @@ public class HippoClientBootstrap {
       });
       bootstrap.connect(host, port).sync();
     } catch (Exception e) {
-      LOGGER.error("hippo client init error:" + this.serviceName, e);
-      throw new HippoServiceUnavailableException("[" + this.serviceName + "]服务不可用,初始化失败.", e);
-    }
-  }
-
-
-  private void initHostAndPort() {
-    String serviceAddress = serviceGovern.getServiceAddress(serviceName);
-    if (StringUtils.isBlank(serviceAddress)) {
-      throw new HippoServiceUnavailableException("[" + serviceName + "]没有发现可用的服务.");
-    }
-    String[] split = serviceAddress.split(":");
-    this.host = split[0];
-    this.port = Integer.parseInt(split[1]);
-    if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
       throw new HippoServiceUnavailableException(
-          "[" + serviceName + "]服务参数异常.host=" + host + ",port=" + port);
+          "[" + this.serviceName + "]服务不可用,初始化失败.host:" + host + ",port:" + port, e);
     }
   }
 
-  public HippoResultCallBack sendAsync(HippoRequest request) throws Exception {
+
+  public HippoResultCallBack sendAsync(HippoRequest request, int timeout) throws Exception {
     HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
@@ -115,6 +78,55 @@ public class HippoClientBootstrap {
 
   public HippoResponse  sendOneWay(HippoRequest hippoRequest) throws Exception {
      return this.handler.sendOneWay(hippoRequest);
+  }
+
+  public String getHost() {
+    return host;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((host == null) ? 0 : host.hashCode());
+    result = prime * result + port;
+    result = prime * result + ((serviceName == null) ? 0 : serviceName.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    HippoClientBootstrap other = (HippoClientBootstrap) obj;
+    if (host == null) {
+      if (other.host != null) return false;
+    } else if (!host.equals(other.host)) return false;
+    if (port != other.port) return false;
+    if (serviceName == null) {
+      if (other.serviceName != null) return false;
+    } else if (!serviceName.equals(other.serviceName)) return false;
+    return true;
+  }
+
+  public AtomicLong getInvokeTimes() {
+    return invokeTimes;
+  }
+
+  @Override
+  public int compareTo(HippoClientBootstrap o) {
+    Long l1 = this.invokeTimes.get();
+    Long l2 = o.invokeTimes.get();
+    return l1.compareTo(l2);
   }
 
 }

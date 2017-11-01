@@ -10,7 +10,11 @@ import org.springframework.beans.BeanUtils;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.exception.HippoReadTimeoutException;
-
+/**
+ * 获取hippo call back result
+ * @author sl
+ *
+ */
 public class HippoResultCallBack {
   private Lock lock = new ReentrantLock();
   private Condition finish = lock.newCondition();

@@ -17,16 +17,26 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
+/**
+ * client process handler
+ * @author sl
+ *
+ */
 public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
 
   private ConcurrentHashMap<String, HippoResultCallBack> callBackMap = new ConcurrentHashMap<>();
   private String serviceName;
   private EventLoopGroup eventLoopGroup;
   private Channel channel;
+  private String host;
+  private int port;
 
-  public HippoRequestHandler(String serviceName, EventLoopGroup eventLoopGroup) {
+  public HippoRequestHandler(String serviceName, EventLoopGroup eventLoopGroup, String host,
+      int port) {
     this.serviceName = serviceName;
     this.eventLoopGroup = eventLoopGroup;
+    this.host = host;
+    this.port = port;
   }
 
 
@@ -36,13 +46,6 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     this.channel = ctx.channel();
   }
 
-  /*
-   * 超时由具体线程自己控制 @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-   * throws Exception { LOGGER.error("netty client error", cause); // 读超时就不close了,保持长链接,不过这里可以+上计数
-   * if (cause instanceof ReadTimeoutException) { this.response = new HippoResponse();
-   * this.response.setError(true); this.response.setThrowable(cause); } else { //
-   * close会触发channelInactive方法 ctx.close(); } }
-   */
 
   @Override
   protected void channelRead0(ChannelHandlerContext arg0, HippoResponse response) throws Exception {
@@ -92,7 +95,8 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
       c.signal(response);
     });
     callBackMap.clear();
-    HippoClientBootstrapMap.remove(serviceName);
+
+    HippoClientBootstrapMap.remove(serviceName, host, port);
   }
 
   public void sendAsync(HippoResultCallBack hippoResultCallBack) {
