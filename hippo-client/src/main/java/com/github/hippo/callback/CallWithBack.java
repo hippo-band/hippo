@@ -12,13 +12,13 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class CallWithBack implements RemoteCallHandler {
     @Override
-    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest) throws Exception {
+    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest,int timeOut) throws Exception {
         try {
             ICallBack iCallBack = hippoRequest.getiCallBack();
             if (iCallBack == null) {
                 throw new HippoRequestTypeNotExistException("callback 不能为null");
             }
-            return hippoClientBootstrap.sendWithCallBack(hippoRequest);
+            return hippoClientBootstrap.sendWithCallBack(hippoRequest,timeOut);
         } finally {
             CallBackHelper.Instance.remove();
         }

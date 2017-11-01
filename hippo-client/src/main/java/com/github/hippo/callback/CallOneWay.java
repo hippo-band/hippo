@@ -16,7 +16,7 @@ public class CallOneWay implements RemoteCallHandler {
     }
 
     @Override
-    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest) throws Exception {
+    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest,int timeOut) throws Exception {
         return hippoClientBootstrap.sendOneWay(hippoRequest);
     }
 

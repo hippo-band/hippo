@@ -71,7 +71,7 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     return hippoResultCallBack;
   }
 
-  public HippoResponse sendWithCallBack(HippoRequest request) {
+  public HippoResponse sendWithCallBack(HippoRequest request,int timeout) {
     HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
     return this.handler.sendWithCallBack(hippoResultCallBack);
   }

@@ -122,6 +122,7 @@ public class HippoProxy {
         } else {
             return hippoResponse.getResult();
         }
+    }
 
     public Object apiRequest(String serviceName, String serviceMethod, Object parameter)
             throws Throwable {

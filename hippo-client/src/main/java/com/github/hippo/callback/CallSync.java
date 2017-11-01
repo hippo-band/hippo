@@ -13,8 +13,8 @@ public class CallSync implements RemoteCallHandler {
 
 
     @Override
-    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest) throws Exception {
-        return hippoClientBootstrap.sendAsync(hippoRequest).getResult();
+    public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest,int timeOut) throws Exception {
+        return hippoClientBootstrap.sendAsync(hippoRequest,timeOut).getResult();
     }
 
     @Override

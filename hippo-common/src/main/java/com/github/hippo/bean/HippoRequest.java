@@ -31,6 +31,7 @@ public class HippoRequest implements Serializable {
   private Object[] parameters;
   private String callType = CallType.SYNC;
   private ICallBack iCallBack;
+  private int timeout;
 
   
 
@@ -121,5 +122,13 @@ public class HippoRequest implements Serializable {
 
   public void setCallType(String callType) {
     this.callType = callType;
+  }
+
+  public int getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(int timeout) {
+    this.timeout = timeout;
   }
 }

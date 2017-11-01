@@ -10,7 +10,7 @@ import com.github.hippo.netty.HippoResultCallBack;
  */
 public interface RemoteCallHandler {
 
-    HippoResponse call(HippoClientBootstrap HippoClientBootstrap, HippoRequest hippoRequest) throws  Exception;
+    HippoResponse call(HippoClientBootstrap HippoClientBootstrap, HippoRequest hippoRequest,int timeOut) throws  Exception;
 
     boolean  canProcess(String callType);
 
