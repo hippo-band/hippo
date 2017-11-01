@@ -2,8 +2,12 @@ package com.github.hippo.hystrix;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.callback.CallFactory;
+import com.github.hippo.callback.CallType;
+import com.github.hippo.callback.RemoteCallHandler;
 import com.github.hippo.client.HippoClientInit;
 import com.github.hippo.exception.HippoReadTimeoutException;
+import com.github.hippo.exception.HippoRequestTypeNotExistException;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoResultCallBack;
@@ -113,8 +117,12 @@ public class HippoCommand extends HystrixCommand<Object> {
 
     HippoClientBootstrap hippoClientBootstrap =
         HippoClientBootstrap.getBootstrap(request.getServiceName(), timeout, serviceGovern);
-    HippoResultCallBack callback = hippoClientBootstrap.sendAsync(request);
-    return callback.getResult();
+    for (RemoteCallHandler remoteCallHandler : CallFactory.getCallHandleList()) {
+      if(remoteCallHandler.canProcess(request.getCallType())) {
+         return remoteCallHandler.call(hippoClientBootstrap,hippoRequest);
+      }
+    }
+    throw new HippoRequestTypeNotExistException("没有符合的callType");
   }
 
 }

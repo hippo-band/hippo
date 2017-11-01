@@ -3,6 +3,8 @@ package com.github.hippo.bean;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import com.github.hippo.callback.CallType;
+import com.github.hippo.callback.ICallBack;
 import com.github.hippo.enums.HippoRequestEnum;
 
 
@@ -27,6 +29,8 @@ public class HippoRequest implements Serializable {
   private String methodName;
   private Class<?>[] parameterTypes;
   private Object[] parameters;
+  private String callType = CallType.SYNC;
+  private ICallBack iCallBack;
 
   
 
@@ -102,13 +106,20 @@ public class HippoRequest implements Serializable {
     this.parameters = parameters;
   }
 
-  @Override
-  public String toString() {
-    return "HippoRequest [serviceName=" + serviceName + ", requestId=" + requestId + ", chainId="
-        + chainId + ", chainOrder=" + chainOrder + ", requestType=" + requestType + ", className="
-        + className + ", methodName=" + methodName + ", parameterTypes="
-        + Arrays.toString(parameterTypes) + ", parameters=" + Arrays.toString(parameters) + "]";
+
+  public ICallBack getiCallBack() {
+    return iCallBack;
   }
 
+  public void setiCallBack(ICallBack iCallBack) {
+    this.iCallBack = iCallBack;
+  }
 
+  public String getCallType() {
+    return callType;
+  }
+
+  public void setCallType(String callType) {
+    this.callType = callType;
+  }
 }

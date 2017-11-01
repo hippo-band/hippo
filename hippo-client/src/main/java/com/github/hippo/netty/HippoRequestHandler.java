@@ -1,9 +1,12 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
+import com.github.hippo.callback.CallFactory;
+import com.github.hippo.callback.RemoteCallHandler;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.threadpool.HippoClientProcessPool;
 
@@ -47,7 +50,11 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     if (response != null && !("-99").equals(response.getRequestId())) {
       HippoClientProcessPool.INSTANCE.getPool().execute(() -> {
         HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
-        hippoResultCallBack.signal(response);
+        for(RemoteCallHandler remoteCallHandler: CallFactory.getCallHandleList()) {
+          if(remoteCallHandler.canProcess(hippoResultCallBack.getHippoRequest().getCallType())) {
+            remoteCallHandler.back(hippoResultCallBack,response);
+          }
+        }
       });
     }
   }
@@ -91,5 +98,23 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
   public void sendAsync(HippoResultCallBack hippoResultCallBack) {
     callBackMap.put(hippoResultCallBack.getHippoRequest().getRequestId(), hippoResultCallBack);
     this.channel.writeAndFlush(hippoResultCallBack.getHippoRequest());
+  }
+
+  public HippoResponse sendOneWay(HippoRequest hippoRequest) {
+    this.channel.writeAndFlush(hippoRequest);
+    return buildEmptyHippoResponse(hippoRequest);
+  }
+
+  public HippoResponse sendWithCallBack(HippoResultCallBack hippoResultCallBack) {
+    sendAsync(hippoResultCallBack);
+    return buildEmptyHippoResponse(hippoResultCallBack.getHippoRequest());
+  }
+
+  private HippoResponse buildEmptyHippoResponse(HippoRequest hippoRequest) {
+    HippoResponse hippoResponse = new HippoResponse();
+    hippoResponse.setRequestId(hippoRequest.getRequestId());
+    hippoResponse.setChainId(hippoRequest.getChainId());
+    hippoResponse.setChainOrder(hippoRequest.getChainOrder());
+    return hippoResponse;
   }
 }

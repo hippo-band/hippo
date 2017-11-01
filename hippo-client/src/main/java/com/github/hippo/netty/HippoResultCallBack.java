@@ -19,7 +19,8 @@ public class HippoResultCallBack {
   private HippoRequest hippoRequest;
 
 
-  protected HippoRequest getHippoRequest() {
+
+  public HippoRequest getHippoRequest() {
     return hippoRequest;
   }
 
@@ -28,7 +29,7 @@ public class HippoResultCallBack {
     this.timeout = timeout;
   }
 
-  protected void signal(HippoResponse hippoResponse) {
+  public void signal(HippoResponse hippoResponse) {
     this.hippoResponse = hippoResponse;
     try {
       lock.lock();

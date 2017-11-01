@@ -62,7 +62,7 @@ public class HippoClientBootstrap {
     this.serviceName = serviceName;
     this.timeout = timeout;
     this.serviceGovern = serviceGovern;
-    init();
+    //init();
   }
 
   private void init() {
@@ -107,4 +107,14 @@ public class HippoClientBootstrap {
     this.handler.sendAsync(hippoResultCallBack);
     return hippoResultCallBack;
   }
+
+  public HippoResponse sendWithCallBack(HippoRequest request) {
+    HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
+    return this.handler.sendWithCallBack(hippoResultCallBack);
+  }
+
+  public HippoResponse  sendOneWay(HippoRequest hippoRequest) throws Exception {
+     return this.handler.sendOneWay(hippoRequest);
+  }
+
 }
