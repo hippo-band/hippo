@@ -145,7 +145,9 @@ public class ServiceGovenImpl implements ServiceGovern {
       DiscoveryManager.getInstance().shutdownComponent();
       DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
       ApplicationInfoManager.getInstance().setInstanceStatus(InstanceStatus.UP);
-      return eureInstanceConfigBean.getNonSecurePort();
+      int nonSecurePort = eureInstanceConfigBean.getNonSecurePort();
+      LOGGER.info(arg0 + "------------注册成功------------port:" + nonSecurePort);
+      return nonSecurePort;
     }
   }
 

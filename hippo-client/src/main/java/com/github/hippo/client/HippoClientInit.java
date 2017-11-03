@@ -115,7 +115,7 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
         return;
       }
       serviceNames.forEach(this::conntectionProcess);
-    }, 10, 10, TimeUnit.SECONDS);
+    }, 120, 15, TimeUnit.SECONDS);
   }
 
   private void conntectionProcess(String serviceName) {

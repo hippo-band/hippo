@@ -53,7 +53,10 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     if (response != null && !("-99").equals(response.getRequestId())) {
       HippoClientProcessPool.INSTANCE.getPool().execute(() -> {
         HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
-
+        // oneway方式没有hippoResultCallBack
+        if (hippoResultCallBack == null) {
+          return;
+        }
         RemoteCallHandler handler = CallTypeHandler.INSTANCE
             .getHandler(hippoResultCallBack.getHippoRequest().getCallType());
         if (handler != null) {
