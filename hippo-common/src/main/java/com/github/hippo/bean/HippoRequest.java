@@ -28,13 +28,22 @@ public class HippoRequest implements Serializable {
   private String methodName;
   private Class<?>[] parameterTypes;
   private Object[] parameters;
-  private transient String callType = CallType.SYNC;
+  private transient CallType callType = CallType.SYNC;
   private transient ICallBack iCallBack;
   private transient int timeout;
 
-  
+
+
+  public CallType getCallType() {
+    return callType;
+  }
+
+  public void setCallType(CallType callType) {
+    this.callType = callType;
+  }
 
   public String getServiceName() {
+
     return serviceName;
   }
 
@@ -115,13 +124,6 @@ public class HippoRequest implements Serializable {
     this.iCallBack = iCallBack;
   }
 
-  public String getCallType() {
-    return callType;
-  }
-
-  public void setCallType(String callType) {
-    this.callType = callType;
-  }
 
   public int getTimeout() {
     return timeout;

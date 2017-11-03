@@ -2,7 +2,7 @@ package com.github.hippo.hystrix;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.callback.CallFactory;
+import com.github.hippo.callback.CallTypeHandler;
 import com.github.hippo.callback.RemoteCallHandler;
 import com.github.hippo.client.HippoClientInit;
 import com.github.hippo.exception.HippoReadTimeoutException;
@@ -113,16 +113,17 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   private HippoResponse getResult(HippoRequest request, int timeout) throws Exception {
 
-    HippoClientBootstrap hippoClientBootstrap = HippoClientBootstrapMap.getBootstrap(request.getServiceName());
+    HippoClientBootstrap hippoClientBootstrap =
+        HippoClientBootstrapMap.getBootstrap(request.getServiceName());
     if (hippoClientBootstrap == null) {
       throw new HippoServiceUnavailableException("[" + request.getServiceName() + "]没有可用的服务");
     }
-    for (RemoteCallHandler remoteCallHandler : CallFactory.getCallHandleList()) {
-      if(remoteCallHandler.canProcess(request.getCallType())) {
-         return remoteCallHandler.call(hippoClientBootstrap,hippoRequest,timeout);
-      }
+    RemoteCallHandler handler = CallTypeHandler.INSTANCE.getHandler(request.getCallType());
+    if (handler == null) {
+      throw new HippoRequestTypeNotExistException(request.getCallType() + "不符合的现有的callType");
+
     }
-    throw new HippoRequestTypeNotExistException("没有符合的callType");
+    return handler.call(hippoClientBootstrap, hippoRequest, timeout);
   }
 
 }

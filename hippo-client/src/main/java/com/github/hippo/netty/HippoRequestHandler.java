@@ -1,11 +1,10 @@
 package com.github.hippo.netty;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.callback.CallFactory;
+import com.github.hippo.callback.CallTypeHandler;
 import com.github.hippo.callback.RemoteCallHandler;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.threadpool.HippoClientProcessPool;
@@ -19,6 +18,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 
 /**
  * client process handler
+ * 
  * @author sl
  *
  */
@@ -53,10 +53,11 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     if (response != null && !("-99").equals(response.getRequestId())) {
       HippoClientProcessPool.INSTANCE.getPool().execute(() -> {
         HippoResultCallBack hippoResultCallBack = callBackMap.remove(response.getRequestId());
-        for(RemoteCallHandler remoteCallHandler: CallFactory.getCallHandleList()) {
-          if(remoteCallHandler.canProcess(hippoResultCallBack.getHippoRequest().getCallType())) {
-            remoteCallHandler.back(hippoResultCallBack,response);
-          }
+
+        RemoteCallHandler handler = CallTypeHandler.INSTANCE
+            .getHandler(hippoResultCallBack.getHippoRequest().getCallType());
+        if (handler != null) {
+          handler.back(hippoResultCallBack, response);
         }
       });
     }

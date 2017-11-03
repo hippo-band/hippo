@@ -4,23 +4,23 @@ package com.github.hippo.callback;
  * @author wangjian
  */
 public enum CallBackHelper {
-    Instance;
+  INSTANCE;
 
-    private final ThreadLocal<ICallBackBean> callBackLocal = new ThreadLocal<>();
+  private final ThreadLocal<ICallBack> callBackLocal = new ThreadLocal<>();
 
-    public ICallBackBean get() {
-        return callBackLocal.get();
+  public ICallBack get() {
+    return callBackLocal.get();
+  }
+
+  public void set(ICallBack iCallBack) {
+    if (iCallBack != null) {
+      callBackLocal.set(iCallBack);
     }
+  }
 
-    public void set(ICallBackBean iCallBackBean) {
-        if(iCallBackBean != null) {
-            callBackLocal.set(iCallBackBean);
-        }
+  public void remove() {
+    if (callBackLocal.get() != null) {
+      callBackLocal.remove();
     }
-
-    public void remove() {
-       if(callBackLocal.get()!=null) {
-           callBackLocal.remove();
-       }
-    }
+  }
 }

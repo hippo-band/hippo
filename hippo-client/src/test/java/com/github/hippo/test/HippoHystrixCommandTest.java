@@ -3,10 +3,8 @@ package com.github.hippo.test;
 import java.util.UUID;
 
 import com.github.hippo.bean.HippoRequest;
-import com.github.hippo.callback.CallBackHelper;
 import com.github.hippo.callback.CallType;
 import com.github.hippo.callback.ICallBack;
-import com.github.hippo.callback.ICallBackBean;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.hystrix.HippoCommand;
@@ -17,12 +15,12 @@ public class HippoHystrixCommandTest {
     HippoHystrixCommandTest hippoHystrixCommandTest = new HippoHystrixCommandTest();
     HippoCommand hippoCommand = hippoHystrixCommandTest.builderHippoCommand();
     try {
-      
+
       System.out.println(hippoCommand.execute());
     } catch (Exception e) {
       // TODO: handle exception
     }
-    
+
     System.out.println(hippoCommand.execute());
   }
 
@@ -34,7 +32,7 @@ public class HippoHystrixCommandTest {
     request.setRequestType(HippoRequestEnum.RPC.getType());
     request.setClassName("com.holyshared.issue.service.PublishService");
     request.setMethodName("isPublished");
-    request.setCallType(CallType.CALLBACK);
+    request.setCallType(CallType.ONEWAY);
     request.setiCallBack(new ICallBack() {
       @Override
       public void onSuccess(Object result) {
