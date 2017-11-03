@@ -13,7 +13,7 @@ import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.callback.CallBackHelper;
 import com.github.hippo.callback.CallType;
-import com.github.hippo.callback.ICallBack;
+import com.github.hippo.callback.ICallBackBean;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;
@@ -46,9 +46,10 @@ public class HippoProxy {
           request.setParameters(args);
           String serviceName = inferfaceClass.getAnnotation(HippoService.class).serviceName();
           request.setServiceName(serviceName);
-          ICallBack callBack = CallBackHelper.INSTANCE.get();
+          ICallBackBean callBack = CallBackHelper.INSTANCE.get();
           if (callBack != null) {
-            request.setiCallBack(callBack);
+            request.setiCallBack(callBack.getiCallBack());
+            request.setCallType(callBack.getCallType());
           }
           ChainThreadLocal.INSTANCE.clearTL();
           HippoCommand hippoCommand =
@@ -110,9 +111,10 @@ public class HippoProxy {
     } else {
       request.setCallType(callType);
     }
-    ICallBack callBack = CallBackHelper.INSTANCE.get();
+    ICallBackBean callBack = CallBackHelper.INSTANCE.get();
     if (callBack != null) {
-      request.setiCallBack(callBack);
+      request.setiCallBack(callBack.getiCallBack());
+      request.setCallType(callBack.getCallType());
     }
     ChainThreadLocal.INSTANCE.clearTL();
 

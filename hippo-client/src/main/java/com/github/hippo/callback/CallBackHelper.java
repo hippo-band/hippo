@@ -4,19 +4,35 @@ package com.github.hippo.callback;
  * @author wangjian
  */
 public enum CallBackHelper {
-  INSTANCE;
+  INSTANCE {
+    @Override
+    public void oneway() {
+      set(new ICallBackBean(null, CallType.ONEWAY));
+    }
 
-  private final ThreadLocal<ICallBack> callBackLocal = new ThreadLocal<>();
+    @Override
+    public void async(ICallBack iCallBack) {
+      set(new ICallBackBean(iCallBack, CallType.ASYNC));
+    }
+  };
 
-  public ICallBack get() {
+  private final ThreadLocal<ICallBackBean> callBackLocal = new ThreadLocal<>();
+
+
+  public abstract void oneway();
+
+  public abstract void async(ICallBack iCallBack);
+
+  public ICallBackBean get() {
     return callBackLocal.get();
   }
 
-  public void set(ICallBack iCallBack) {
-    if (iCallBack != null) {
-      callBackLocal.set(iCallBack);
+  void set(ICallBackBean iCallBackBean) {
+    if (iCallBackBean != null) {
+      callBackLocal.set(iCallBackBean);
     }
   }
+
 
   public void remove() {
     if (callBackLocal.get() != null) {
