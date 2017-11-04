@@ -52,7 +52,6 @@ public final class HippoClientBootstrapMap {
 
   public static HippoClientBootstrap getBootstrap(String serviceName) {
     Map<String, HippoClientBootstrap> map = get(serviceName);
-    System.out.println(">>>>>>>" + map);
     if (map == null || map.isEmpty()) {
       return null;
     }

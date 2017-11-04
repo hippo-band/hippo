@@ -12,7 +12,6 @@ import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.callback.CallBackHelper;
-import com.github.hippo.callback.CallType;
 import com.github.hippo.callback.ICallBackBean;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
@@ -92,7 +91,7 @@ public class HippoProxy {
 
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter, int timeout,
       int retryTimes, boolean isCircuitBreaker, int semaphoreMaxConcurrentRequests,
-      boolean fallbackEnable, Class<?> hippoFailPolicy, CallType callType) throws Throwable {
+      boolean fallbackEnable, Class<?> hippoFailPolicy) throws Throwable {
     String[] serviceMethods = serviceMethod.split("/");
     Object[] objects = new Object[1];
     objects[0] = parameter;
@@ -106,17 +105,17 @@ public class HippoProxy {
     request.setParameterTypes(null);
     request.setParameters(objects);
     request.setServiceName(serviceName);
-    if (callType == null) {
-      request.setCallType(CallType.SYNC);
-    } else {
-      request.setCallType(callType);
-    }
     ICallBackBean callBack = CallBackHelper.INSTANCE.get();
     if (callBack != null) {
       request.setiCallBack(callBack.getiCallBack());
       request.setCallType(callBack.getCallType());
     }
     ChainThreadLocal.INSTANCE.clearTL();
+
+    // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
+    if (HippoClientBootstrapMap.get(serviceName) == null) {
+      conntectionOne(serviceName);
+    }
 
     HippoCommand hippoCommand = new HippoCommand(request, timeout, retryTimes, isCircuitBreaker,
         semaphoreMaxConcurrentRequests == 0 ? 10 : semaphoreMaxConcurrentRequests, hippoFailPolicy,
@@ -131,13 +130,8 @@ public class HippoProxy {
 
   public Object apiRequest(String serviceName, String serviceMethod, Object parameter)
       throws Throwable {
-    return apiRequest(serviceName, serviceMethod, parameter, CallType.SYNC);
+    return apiRequest(serviceName, serviceMethod, parameter, 5000, 0, true, 10, false, null);
   }
 
-  public Object apiRequest(String serviceName, String serviceMethod, Object parameter,
-      CallType callType) throws Throwable {
-    return apiRequest(serviceName, serviceMethod, parameter, 5000, 0, true, 10, false, null,
-        callType);
-  }
 
 }
