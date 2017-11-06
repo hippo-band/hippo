@@ -78,9 +78,7 @@ public class ServiceGovenImpl implements ServiceGovern {
 
   private DiscoveryClient getClient() {
     synchronized (ServiceGovenImpl.class) {
-      if (DiscoveryManager.getInstance().getDiscoveryClient() != null) {
-        return DiscoveryManager.getInstance().getDiscoveryClient();
-      }
+      DiscoveryManager.getInstance().shutdownComponent();
       EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
       EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
       eureClientConfigBean.setRegisterWithEureka(false);

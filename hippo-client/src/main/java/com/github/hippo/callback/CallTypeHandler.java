@@ -13,7 +13,7 @@ public enum CallTypeHandler {
     @Override
     public RemoteCallHandler getHandler(CallType callType) {
       if (callType == CallType.ASYNC) {
-        return new CallWithBack();
+        return new CallAsync();
       }
       if (callType == CallType.SYNC) {
         return new CallSync();

@@ -9,7 +9,7 @@ import com.github.hippo.netty.HippoResultCallBack;
 /**
  * Created by wangjian on 17/10/24.
  */
-public class CallWithBack implements RemoteCallHandler {
+public class CallAsync implements RemoteCallHandler {
   @Override
   public HippoResponse call(HippoClientBootstrap hippoClientBootstrap, HippoRequest hippoRequest,
       int timeOut) throws Exception {
@@ -20,7 +20,7 @@ public class CallWithBack implements RemoteCallHandler {
       }
       return hippoClientBootstrap.sendWithCallBack(hippoRequest, timeOut);
     } finally {
-      CallBackHelper.INSTANCE.remove();
+      CallTypeHelper.SETTING.remove();
     }
 
   }

@@ -3,8 +3,8 @@ package com.github.hippo.callback;
 /**
  * @author wangjian
  */
-public enum CallBackHelper {
-  INSTANCE {
+public enum CallTypeHelper {
+  SETTING {
     @Override
     public void oneway() {
       set(new ICallBackBean(null, CallType.ONEWAY));

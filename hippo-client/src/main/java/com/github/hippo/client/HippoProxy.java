@@ -11,7 +11,7 @@ import com.github.hippo.annotation.HippoClient;
 import com.github.hippo.annotation.HippoService;
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.callback.CallBackHelper;
+import com.github.hippo.callback.CallTypeHelper;
 import com.github.hippo.callback.ICallBackBean;
 import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
@@ -45,7 +45,7 @@ public class HippoProxy {
           request.setParameters(args);
           String serviceName = inferfaceClass.getAnnotation(HippoService.class).serviceName();
           request.setServiceName(serviceName);
-          ICallBackBean callBack = CallBackHelper.INSTANCE.get();
+          ICallBackBean callBack = CallTypeHelper.SETTING.get();
           if (callBack != null) {
             request.setiCallBack(callBack.getiCallBack());
             request.setCallType(callBack.getCallType());
@@ -105,7 +105,7 @@ public class HippoProxy {
     request.setParameterTypes(null);
     request.setParameters(objects);
     request.setServiceName(serviceName);
-    ICallBackBean callBack = CallBackHelper.INSTANCE.get();
+    ICallBackBean callBack = CallTypeHelper.SETTING.get();
     if (callBack != null) {
       request.setiCallBack(callBack.getiCallBack());
       request.setCallType(callBack.getCallType());
