@@ -55,6 +55,7 @@ public final class HippoClientBootstrapMap {
     if (map == null || map.isEmpty()) {
       return null;
     }
+    // like round robin
     Optional<HippoClientBootstrap> findFirst = map.values().stream().sorted().findFirst();
     if (findFirst.isPresent()) {
       HippoClientBootstrap hippoClientBootstrap = findFirst.get();

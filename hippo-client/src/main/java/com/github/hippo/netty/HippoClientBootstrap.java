@@ -71,13 +71,13 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     return hippoResultCallBack;
   }
 
-  public HippoResponse sendWithCallBack(HippoRequest request,int timeout) {
+  public HippoResponse sendWithCallBack(HippoRequest request, int timeout) {
     HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
     return this.handler.sendWithCallBack(hippoResultCallBack);
   }
 
-  public HippoResponse  sendOneWay(HippoRequest hippoRequest) throws Exception {
-     return this.handler.sendOneWay(hippoRequest);
+  public HippoResponse sendOneWay(HippoRequest hippoRequest) throws Exception {
+    return this.handler.sendOneWay(hippoRequest);
   }
 
   public String getHost() {
@@ -90,32 +90,6 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
 
   public String getServiceName() {
     return serviceName;
-  }
-
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((host == null) ? 0 : host.hashCode());
-    result = prime * result + port;
-    result = prime * result + ((serviceName == null) ? 0 : serviceName.hashCode());
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
-    HippoClientBootstrap other = (HippoClientBootstrap) obj;
-    if (host == null) {
-      if (other.host != null) return false;
-    } else if (!host.equals(other.host)) return false;
-    if (port != other.port) return false;
-    if (serviceName == null) {
-      if (other.serviceName != null) return false;
-    } else if (!serviceName.equals(other.serviceName)) return false;
-    return true;
   }
 
   public AtomicLong getInvokeTimes() {

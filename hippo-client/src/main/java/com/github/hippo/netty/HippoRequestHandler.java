@@ -7,6 +7,7 @@ import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.callback.CallTypeHandler;
 import com.github.hippo.callback.RemoteCallHandler;
 import com.github.hippo.enums.HippoRequestEnum;
+import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.threadpool.HippoClientProcessPool;
 
 import io.netty.channel.Channel;
@@ -93,9 +94,9 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     }
     this.callBackMap.values().forEach(c -> {
       HippoResponse response = new HippoResponse();
-      response.setResult(null);
       response.setError(true);
-      response.setThrowable(new IllegalAccessError("hippo server error"));
+      response.setThrowable(
+          new HippoServiceException("hippo server error trigger client channelInactive"));
       c.signal(response);
     });
     callBackMap.clear();
