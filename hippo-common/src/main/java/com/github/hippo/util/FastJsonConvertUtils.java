@@ -22,12 +22,15 @@ public class FastJsonConvertUtils {
    * @return obj
    */
   public static Object cleanseToObject(Object obj) {
-    if (obj == null) return null;
+    if (obj == null) {
+      return null;
+    }
     try {
-      if (obj.getClass().isPrimitive())
+      if (obj.getClass().isPrimitive()) {
         return obj;
-      else
+      } else {
         return JSON.toJSONString(obj);
+      }
     } catch (Exception e) {
       throw new ClassCastException("obj cleanse:" + ToStringBuilder.reflectionToString(obj));
     }

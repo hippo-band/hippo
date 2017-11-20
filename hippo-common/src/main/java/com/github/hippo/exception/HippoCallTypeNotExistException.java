@@ -6,12 +6,17 @@ package com.github.hippo.exception;
  */
 public class HippoCallTypeNotExistException extends HippoRuntimeException {
 
-    public HippoCallTypeNotExistException(String msg) {
-        super(msg);
+  /**
+  * 
+  */
+  private static final long serialVersionUID = 8196501755259591782L;
 
-    }
+  public HippoCallTypeNotExistException(String msg) {
+    super(msg);
 
-    public HippoCallTypeNotExistException(String msg, Throwable throwable) {
-        super(msg, throwable);
-    }
+  }
+
+  public HippoCallTypeNotExistException(String msg, Throwable throwable) {
+    super(msg, throwable);
+  }
 }

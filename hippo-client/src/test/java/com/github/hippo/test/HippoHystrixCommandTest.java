@@ -1,6 +1,7 @@
 package com.github.hippo.test;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.callback.CallType;
@@ -9,19 +10,50 @@ import com.github.hippo.chain.ChainThreadLocal;
 import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.hystrix.HippoCommand;
 
+import rx.Observable;
+import rx.Observer;
+import rx.functions.Action1;
+
 public class HippoHystrixCommandTest {
 
-  public static void main(String[] args) throws InstantiationException, IllegalAccessException {
-    HippoHystrixCommandTest hippoHystrixCommandTest = new HippoHystrixCommandTest();
-    HippoCommand hippoCommand = hippoHystrixCommandTest.builderHippoCommand();
-    try {
+  public static void main(String[] args) throws InstantiationException, IllegalAccessException, InterruptedException {
 
-      System.out.println(hippoCommand.execute());
-    } catch (Exception e) {
-      // TODO: handle exception
-    }
+    Observable.interval(5, TimeUnit.SECONDS).window(1, TimeUnit.MICROSECONDS)
+        .subscribe(new Observer<Observable<Long>>() {
+          @Override
+          public void onCompleted() {
+            System.out.println("------>onCompleted()");
+          }
 
-    System.out.println(hippoCommand.execute());
+          @Override
+          public void onError(Throwable e) {
+            System.out.println("------>onError()" + e);
+          }
+
+          @Override
+          public void onNext(Observable<Long> integerObservable) {
+            System.out.println("------->onNext()");
+            integerObservable.subscribe(new Action1<Long>() {
+              @Override
+              public void call(Long integer) {
+                System.out.println("------>call():" + integer);
+              }
+            });
+          }
+        });
+    
+    Thread.sleep(10000*10000);
+    //
+    // HippoHystrixCommandTest hippoHystrixCommandTest = new HippoHystrixCommandTest();
+    // HippoCommand hippoCommand = hippoHystrixCommandTest.builderHippoCommand();
+    // try {
+    //
+    // System.out.println(hippoCommand.execute());
+    // } catch (Exception e) {
+    // // TODO: handle exception
+    // }
+    //
+    // System.out.println(hippoCommand.execute());
   }
 
   private HippoRequest buildHippoRequest() {

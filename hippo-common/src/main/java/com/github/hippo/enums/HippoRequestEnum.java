@@ -1,5 +1,9 @@
 package com.github.hippo.enums;
-
+/**
+ * 调用方式枚举
+ * @author sl
+ *
+ */
 public enum HippoRequestEnum {
   RPC(0, "RPC调用"), API(1, "API调用"), PING(2, "长连接PING");
   private int type;

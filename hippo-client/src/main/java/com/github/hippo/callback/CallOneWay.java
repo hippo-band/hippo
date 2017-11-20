@@ -6,7 +6,7 @@ import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoResultCallBack;
 
 /**
- * @author
+ * @author sl
  */
 public class CallOneWay implements RemoteCallHandler {
   @Override

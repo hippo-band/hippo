@@ -11,6 +11,8 @@ import java.net.ServerSocket;
  */
 public final class ServiceGovernUtil {
 
+  private ServiceGovernUtil() {}
+
   /**
    * 获取服务器可用的端口(不需要用户自己设定端口了)
    * 

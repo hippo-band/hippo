@@ -2,7 +2,7 @@ package com.github.hippo.callback;
 
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
-import com.github.hippo.exception.HippoRequestTypeNotExistException;
+import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.netty.HippoClientBootstrap;
 import com.github.hippo.netty.HippoResultCallBack;
 
@@ -16,7 +16,7 @@ public class CallAsync implements RemoteCallHandler {
     try {
       ICallBack iCallBack = hippoRequest.getiCallBack();
       if (iCallBack == null) {
-        throw new HippoRequestTypeNotExistException("callback 不能为null");
+        throw new HippoServiceException("callback 不能为null");
       }
       return hippoClientBootstrap.sendWithCallBack(hippoRequest, timeOut);
     } finally {

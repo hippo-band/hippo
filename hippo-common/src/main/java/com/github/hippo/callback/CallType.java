@@ -9,6 +9,7 @@ package com.github.hippo.callback;
 
 public enum CallType {
 
+  
   SYNC("同步调用"), ONEWAY("单向发送不需要拿返回结果"), ASYNC("异步调用,可以从callback拿返回结果");
 
   private String desc;
