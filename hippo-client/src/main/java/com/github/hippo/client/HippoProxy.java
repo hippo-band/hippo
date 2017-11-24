@@ -57,7 +57,8 @@ public class HippoProxy {
                   hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled());
           HippoResponse hippoResponse;
           // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
-          if (HippoClientBootstrapMap.get(serviceName) == null) {
+          if (HippoClientBootstrapMap.get(serviceName) == null
+              || HippoClientBootstrapMap.get(serviceName).isEmpty()) {
             conntectionOne(serviceName);
           }
           if (hippoClient.isUseHystrix()) {
@@ -113,7 +114,8 @@ public class HippoProxy {
     ChainThreadLocal.INSTANCE.clearTL();
 
     // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
-    if (HippoClientBootstrapMap.get(serviceName) == null) {
+    if (HippoClientBootstrapMap.get(serviceName) == null
+        || HippoClientBootstrapMap.get(serviceName).isEmpty()) {
       conntectionOne(serviceName);
     }
 

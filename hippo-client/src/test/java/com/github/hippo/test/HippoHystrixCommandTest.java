@@ -13,12 +13,14 @@ import com.github.hippo.hystrix.HippoCommand;
 import rx.Observable;
 import rx.Observer;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class HippoHystrixCommandTest {
 
-  public static void main(String[] args) throws InstantiationException, IllegalAccessException, InterruptedException {
+  public static void main(String[] args)
+      throws InstantiationException, IllegalAccessException, InterruptedException {
 
-    Observable.interval(5, TimeUnit.SECONDS).window(1, TimeUnit.MICROSECONDS)
+    Observable.interval(5, TimeUnit.SECONDS).window(3, TimeUnit.SECONDS)
         .subscribe(new Observer<Observable<Long>>() {
           @Override
           public void onCompleted() {
@@ -41,8 +43,8 @@ public class HippoHystrixCommandTest {
             });
           }
         });
-    
-    Thread.sleep(10000*10000);
+
+    Thread.sleep(10000 * 10000);
     //
     // HippoHystrixCommandTest hippoHystrixCommandTest = new HippoHystrixCommandTest();
     // HippoCommand hippoCommand = hippoHystrixCommandTest.builderHippoCommand();
