@@ -93,8 +93,8 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
         e1.printStackTrace();
       }
       int port = serviceGovern.register(registryNames.iterator().next());
-      EventLoopGroup bossGroup = new NioEventLoopGroup();
-      EventLoopGroup workerGroup = new NioEventLoopGroup();
+      EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+      EventLoopGroup workerGroup = new NioEventLoopGroup(1);
       try {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)

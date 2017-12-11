@@ -5,13 +5,14 @@ import java.util.concurrent.Executors;
 
 /**
  * client thread pool
+ * 
  * @author sl
  *
  */
 public enum HippoClientProcessPool {
   INSTANCE;
   private ExecutorService EXECUTORSERVICE =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 3 + 2);
 
   public ExecutorService getPool() {
     return EXECUTORSERVICE;

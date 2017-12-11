@@ -35,7 +35,9 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HippoServerHandler.class);
   private static final ExecutorService pool =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 3 + 2);
+
+  private static final ExecutorService heartBeatPool = Executors.newSingleThreadExecutor();
 
   private void handle(ChannelHandlerContext ctx, HippoRequest request) {
     long start = System.currentTimeMillis();
@@ -168,7 +170,12 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, HippoRequest request) throws Exception {
-    pool.execute(() -> handle(ctx, request));
+    if (request != null && request.getRequestType() == HippoRequestEnum.PING.getType()) {
+      // 单独的线程去执行心跳操作,业务请求不影响心跳
+      heartBeatPool.execute(() -> handle(ctx, request));
+    } else {
+      pool.execute(() -> handle(ctx, request));
+    }
   }
 
   private boolean isJavaClass(Class<?> clz) {
