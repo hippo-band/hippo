@@ -18,7 +18,6 @@ public class HippoServiceException extends HippoRuntimeException {
 
   public HippoServiceException(String msg) {
     super(msg);
-
   }
 
   public HippoServiceException(int code, String msg) {
@@ -38,10 +37,5 @@ public class HippoServiceException extends HippoRuntimeException {
   public int getCode() {
     return code;
   }
-
-  public void setCode(int code) {
-    this.code = code;
-  }
-
 
 }
