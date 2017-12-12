@@ -6,7 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.netflix.discovery.CommonConstants;
 import com.netflix.discovery.EurekaClientConfig;
+import com.netflix.discovery.internal.util.Archaius1Utils;
+import com.netflix.discovery.shared.transport.DefaultEurekaTransportConfig;
+import com.netflix.discovery.shared.transport.EurekaTransportConfig;
 
 /**
  * 自定义 EurekaClientConfigBean
@@ -494,6 +498,42 @@ public class EurekaClientConfigBean implements EurekaClientConfig {
 
   public void setEscapeCharReplacement(String escapeCharReplacement) {
     this.escapeCharReplacement = escapeCharReplacement;
+  }
+
+  @Override
+  public boolean allowRedirects() {
+    return false;
+  }
+
+  @Override
+  public String getClientDataAccept() {
+    return null;
+  }
+
+  @Override
+  public String getDecoderName() {
+    return null;
+  }
+
+  @Override
+  public String getEncoderName() {
+    return null;
+  }
+
+  @Override
+  public String getExperimental(String arg0) {
+    return null;
+  }
+
+  @Override
+  public EurekaTransportConfig getTransportConfig() {
+    return new DefaultEurekaTransportConfig(CommonConstants.DEFAULT_CONFIG_NAMESPACE,
+        Archaius1Utils.initConfig(CommonConstants.CONFIG_FILE_NAME));
+  }
+
+  @Override
+  public boolean shouldOnDemandUpdateStatusChange() {
+    return false;
   }
 
 }

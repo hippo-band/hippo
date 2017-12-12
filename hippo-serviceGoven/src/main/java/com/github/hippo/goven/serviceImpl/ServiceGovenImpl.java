@@ -18,10 +18,11 @@ import com.github.hippo.goven.eureka.EurekaInstanceConfigBean;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.govern.utils.ServiceGovernUtil;
 import com.netflix.appinfo.ApplicationInfoManager;
+import com.netflix.appinfo.EurekaInstanceConfig;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.InstanceStatus;
+import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
 import com.netflix.discovery.DiscoveryClient;
-import com.netflix.discovery.DiscoveryManager;
 
 /**
  * 服务治理具体实现
@@ -54,6 +55,29 @@ public class ServiceGovenImpl implements ServiceGovern {
   @Value("${eureka.client.zone:defaultZone}")
   private String zone;
 
+
+  private static ApplicationInfoManager findManager;
+
+  private static synchronized ApplicationInfoManager initializeApplicationInfoManager(
+      EurekaInstanceConfig instanceConfig) {
+    if (findManager == null) {
+      InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
+      findManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
+    }
+    return findManager;
+  }
+
+  private static ApplicationInfoManager regiestManager;
+
+  private static synchronized ApplicationInfoManager initializeRegiestApplicationInfoManager(
+      EurekaInstanceConfig instanceConfig) {
+    if (regiestManager == null) {
+      InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
+      regiestManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
+    }
+    return regiestManager;
+  }
+
   @Override
   public String getServiceAddress(String arg0) {
     DiscoveryClient discoveryClient = getClient();
@@ -66,6 +90,8 @@ public class ServiceGovenImpl implements ServiceGovern {
     } catch (Exception e) {
       LOGGER.error("can not get an instance of service from euraka server " + arg0, e);
       throw e;
+    } finally {
+      discoveryClient.shutdown();
     }
     String defaultAddress = "";
     try {
@@ -78,10 +104,6 @@ public class ServiceGovenImpl implements ServiceGovern {
 
   private DiscoveryClient getClient() {
     synchronized (ServiceGovenImpl.class) {
-      if (DiscoveryManager.getInstance().getDiscoveryClient() != null) {
-        return DiscoveryManager.getInstance().getDiscoveryClient();
-      }
-      DiscoveryManager.getInstance().shutdownComponent();
       EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
       EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
       eureClientConfigBean.setRegisterWithEureka(false);
@@ -93,15 +115,15 @@ public class ServiceGovenImpl implements ServiceGovern {
           StringUtils.isBlank(serviceUrl) ? EurekaClientConfigBean.DEFAULT_URL : serviceUrl);
       eureClientConfigBean.setAvailabilityZones(zones);
       eureClientConfigBean.setServiceUrl(serviceUrls);
-      DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
-      return DiscoveryManager.getInstance().getDiscoveryClient();
+
+      return new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
+          eureClientConfigBean);
     }
   }
 
   @Override
   public int register(String arg0) {
     synchronized (ServiceGovenImpl.class) {
-      DiscoveryManager.getInstance().shutdownComponent();
       LOGGER.info("------------正在注册------------" + arg0);
       EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
       EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
@@ -142,10 +164,9 @@ public class ServiceGovenImpl implements ServiceGovern {
       serviceUrls.put(zone, serviceUrl);
       eureClientConfigBean.setAvailabilityZones(zones);
       eureClientConfigBean.setServiceUrl(serviceUrls);
-      ApplicationInfoManager.getInstance().initComponent(eureInstanceConfigBean);
-      DiscoveryManager.getInstance().shutdownComponent();
-      DiscoveryManager.getInstance().initComponent(eureInstanceConfigBean, eureClientConfigBean);
-      ApplicationInfoManager.getInstance().setInstanceStatus(InstanceStatus.UP);
+      DiscoveryClient client = new DiscoveryClient(
+          initializeRegiestApplicationInfoManager(eureInstanceConfigBean), eureClientConfigBean);
+      client.getApplicationInfoManager().setInstanceStatus(InstanceStatus.UP);
       int nonSecurePort = eureInstanceConfigBean.getNonSecurePort();
       LOGGER.info(arg0 + "------------注册成功------------port:" + nonSecurePort);
       return nonSecurePort;
@@ -155,9 +176,17 @@ public class ServiceGovenImpl implements ServiceGovern {
   @Override
   public List<String> getServiceAddresses(String serviceName) {
     DiscoveryClient discoveryClient = getClient();
-    List<InstanceInfo> instancesByVipAddress =
-        discoveryClient.getInstancesByVipAddress(serviceName, false);
-    return instancesByVipAddress.stream().map(i -> i.getIPAddr() + ":" + i.getPort())
-        .collect(Collectors.toList());
+    try {
+      List<InstanceInfo> instancesByVipAddress =
+          discoveryClient.getInstancesByVipAddress(serviceName, false);
+      discoveryClient.shutdown();
+      return instancesByVipAddress.stream().map(i -> i.getIPAddr() + ":" + i.getPort())
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      discoveryClient.shutdown();
+    }
+
   }
 }

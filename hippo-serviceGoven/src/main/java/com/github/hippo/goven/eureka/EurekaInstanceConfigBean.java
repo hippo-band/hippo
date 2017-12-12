@@ -232,8 +232,7 @@ public class EurekaInstanceConfigBean implements EurekaInstanceConfig {
       String instanceId = EurekaInstanceConfigBean.this.metadataMap.get("instanceId");
       if (instanceId != null) {
         String old = getHostname();
-        String id = old.endsWith(instanceId) ? old : old + ":" + instanceId;
-        return id;
+        return old.endsWith(instanceId) ? old : old + ":" + instanceId;
       }
       return getHostname();
     }
@@ -357,5 +356,15 @@ public class EurekaInstanceConfigBean implements EurekaInstanceConfig {
   @Override
   public String getNamespace() {
     return this.namespace;
+  }
+
+  @Override
+  public String getInstanceId() {
+    return null;
+  }
+
+  @Override
+  public String[] getDefaultAddressResolutionOrder() {
+    return null;
   }
 }
