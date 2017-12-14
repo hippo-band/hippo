@@ -97,15 +97,9 @@ public class HippoCommand extends HystrixCommand<Object> {
 
   public HippoResponse getHippoResponse(HippoRequest request, int timeout, int retryTimes)
       throws Exception {
-
-    // 重试次数不能大于5次
-    int index = retryTimes;
-    if (retryTimes >= 5) {
-      index = 5;
-    }
     HippoResponse result = getResult(request, timeout);
     if (result.isError() && result.getThrowable() instanceof HippoReadTimeoutException
-        && index > 0) {
+        && retryTimes > 0) {
       return getHippoResponse(request, timeout, retryTimes - 1);
     }
     return result;

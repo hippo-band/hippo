@@ -13,8 +13,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<hippo-common-version>1.1.1</hippo-common-version>
-		<hippo-serviceGoven-version>1.1.1</hippo-serviceGoven-version>
+		<hippo.common.version>1.1.1</hippo.common.version>
+		<hippo.serviceGoven.version>1.1.1</hippo.serviceGoven.version>
+		<hystrix.version>1.5.10</hystrix.version>
 	</properties>
 
 	<licenses>
@@ -42,18 +43,18 @@
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-common</artifactId>
-				<version>${hippo-common-version}</version>
+				<version>${hippo.common.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-serviceGoven</artifactId>
-				<version>${hippo-serviceGoven-version}</version>
+				<version>${hippo.serviceGoven.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.netflix.hystrix</groupId>
 				<artifactId>hystrix-core</artifactId>
-				<version>1.5.10</version>
+				<version>${hystrix.version}</version>
 			</dependency>
 
 			<dependency>
@@ -81,12 +82,6 @@
 		<dependency>
 			<groupId>com.github.hippo-band</groupId>
 			<artifactId>hippo-serviceGoven</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>com.netflix.rxjava</groupId>
-					<artifactId>rxjava-core</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 

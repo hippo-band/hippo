@@ -61,7 +61,7 @@ public class HippoProxy {
               || HippoClientBootstrapMap.get(serviceName).isEmpty()) {
             conntectionOne(serviceName);
           }
-          if (hippoClient.isUseHystrix()) {
+          if (hippoClient.isUseHystrix() || hippoClient.isCircuitBreaker()) {
             hippoResponse = (HippoResponse) hippoCommand.execute();
           } else {
             hippoResponse = hippoCommand.getHippoResponse(request, hippoClient.timeout(),

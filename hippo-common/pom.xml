@@ -13,13 +13,13 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<protostuff-version>1.0.10</protostuff-version>
-		<objenesis-version>2.4</objenesis-version>
-		<spring-version>4.3.1.RELEASE</spring-version>
-		<fastjson-version>1.2.36</fastjson-version>
-		<logback-version>1.1.2</logback-version>
-		<slf4j-version>1.7.5</slf4j-version>
-		<apache-commons-lang3.version>3.1</apache-commons-lang3.version>
+		<protostuff.version>1.0.10</protostuff.version>
+		<objenesis.version>2.4</objenesis.version>
+		<spring.version>4.3.1.RELEASE</spring.version>
+		<fastjson.version>1.2.36</fastjson.version>
+		<logback.version>1.1.2</logback.version>
+		<slf4j.version>1.7.5</slf4j.version>
+		<apache.commons.lang3.version>3.1</apache.commons.lang3.version>
 		<netty.version>4.1.4.Final</netty.version>
 		<hippo.annotition.version>1.1.1</hippo.annotition.version>
 	</properties>
@@ -60,28 +60,28 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-context</artifactId>
-				<version>${spring-version}</version>
+				<version>${spring.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.dyuproject.protostuff</groupId>
 				<artifactId>protostuff-core</artifactId>
-				<version>${protostuff-version}</version>
+				<version>${protostuff.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.dyuproject.protostuff</groupId>
 				<artifactId>protostuff-runtime</artifactId>
-				<version>${protostuff-version}</version>
+				<version>${protostuff.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>
-				<version>${objenesis-version}</version>
+				<version>${objenesis.version}</version>
 			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>${fastjson-version}</version>
+				<version>${fastjson.version}</version>
 			</dependency>
 
 
@@ -89,24 +89,24 @@
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
-				<version>${slf4j-version}</version>
+				<version>${slf4j.version}</version>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-classic</artifactId>
-				<version>${logback-version}</version>
+				<version>${logback.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-core</artifactId>
-				<version>${logback-version}</version>
+				<version>${logback.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>${apache-commons-lang3.version}</version>
+				<version>${apache.commons.lang3.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

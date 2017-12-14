@@ -104,6 +104,7 @@ public class EurekaClientConfigBean implements EurekaClientConfig {
   private String escapeCharReplacement = "__";
 
   @Override
+  @Deprecated
   public boolean shouldGZipContent() {
     return this.gZipContent;
   }

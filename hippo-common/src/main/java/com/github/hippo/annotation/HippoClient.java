@@ -41,6 +41,7 @@ public @interface HippoClient {
 
   /**
    * 熔断开关 默认开启熔断
+   * 熔断打开那hystrix就一定也是打开
    * 
    * @return
    */

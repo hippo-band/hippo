@@ -13,9 +13,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<commons-beanutils-version>1.9.2</commons-beanutils-version>
-		<hippo-common-version>1.1.1</hippo-common-version>
-		<hippo-serviceGoven-version>1.1.1</hippo-serviceGoven-version>
+		<commons.beanutils.version>1.9.2</commons.beanutils.version>
+		<hippo.common.version>1.1.1</hippo.common.version>
+		<hippo.serviceGoven.version>1.1.1</hippo.serviceGoven.version>
 	</properties>
 
 	<licenses>
@@ -45,17 +45,17 @@
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-common</artifactId>
-				<version>${hippo-common-version}</version>
+				<version>${hippo.common.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-serviceGoven</artifactId>
-				<version>${hippo-serviceGoven-version}</version>
+				<version>${hippo.serviceGoven.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>commons-beanutils</groupId>
 				<artifactId>commons-beanutils</artifactId>
-				<version>${commons-beanutils-version}</version>
+				<version>${commons.beanutils.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>
