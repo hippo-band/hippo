@@ -100,6 +100,7 @@
 
 		</dependencies>
 	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.github.hippo-band</groupId>
@@ -117,6 +118,7 @@
 			<groupId>javax.inject</groupId>
 			<artifactId>javax.inject</artifactId>
 		</dependency>
+<<<<<<< HEAD
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
@@ -145,6 +147,8 @@
 
 
 
+=======
+>>>>>>> origin/master
 	</dependencies>
 
 	<profiles>
