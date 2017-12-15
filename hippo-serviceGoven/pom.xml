@@ -118,7 +118,6 @@
 			<groupId>javax.inject</groupId>
 			<artifactId>javax.inject</artifactId>
 		</dependency>
-<<<<<<< HEAD
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
@@ -145,10 +144,6 @@
 			<artifactId>archaius-core</artifactId>
 		</dependency>
 
-
-
-=======
->>>>>>> origin/master
 	</dependencies>
 
 	<profiles>
