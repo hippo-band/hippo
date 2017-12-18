@@ -26,12 +26,12 @@ maven分的比较细,具体如下：
 
     <artifactId>hippo-annotation</artifactId>
 
-    <version>1.0.0</version>
+    <version>1.1.1</version>
 
 </dependency>
 ```
 
-接口的具体实现类的项目(也就是通俗的服务端)需要依赖以下pom
+接口的具体实现类的项目(也就是服务端)需要依赖以下pom
 
 ps:hippo-server-with-eureka是集成了去eureka注册的相关代码
 
@@ -44,7 +44,7 @@ ps:hippo-server-with-eureka是集成了去eureka注册的相关代码
 
     <artifactId>hippo-server-with-eureka</artifactId>
 
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 
 </dependency>
 ```
@@ -58,7 +58,7 @@ ps:hippo-cleint-with-eureka同样集成了去eureka获取注册信息的相关�
 <dependency>
     <groupId>com.github.hippo-band</groupId>
     <artifactId>hippo-client-with-eureka</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </dependency>
 ```
 
@@ -99,21 +99,16 @@ public class TestServiceImpl implements TestService{
 #### 服务配置
 
 ```
-在application-context.xml里加上
-<context:component-scan base-package="com.github.hippo" />
 在任一*.properties里配上eureka地址即可
 eureka.serviceUrl=http://127.0.0.1/eureka/
 ```
 
-application-context.xml主要是扫到hippo的相关jar包
 至于服务ip和端口hippo会自动获取,当然也是可以人工在*.properties指定。
 然后启动项目即可,如果使用的是hippo-demo那就是直接运行ServerContainer类.
 
 #### 客户端配置
 
 ```
-在application-context.xml里加上
-<context:component-scan base-package="com.github.hippo" />
 在任一*.properties里配上eureka地址即可
 eureka.serviceUrl=http://127.0.0.1/eureka/
 ```
@@ -143,7 +138,6 @@ public class TestServiceTest {
 
 支持3种调用方式 sync async-with-callback oneway
 集成hystrix可以实现降级熔断等
-
 支持json方式的通信方式,主要集成在apigate实现透传调用服务,再也不用写一个server在配套写一个webapp项目提供http服务了。
 
 如下
