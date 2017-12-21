@@ -15,7 +15,7 @@ public final class HippoClientBootstrapMap {
   private static final Map<String, Map<String, HippoClientBootstrap>> BOOTSTRAPMAP =
       new ConcurrentHashMap<>();
 
-  public static void put(String serviceName, String host, int port,
+  public synchronized static void put(String serviceName, String host, int port,
       HippoClientBootstrap bootstrap) {
     if (!BOOTSTRAPMAP.containsKey(serviceName)) {
       Map<String, HippoClientBootstrap> map = new ConcurrentHashMap<>();
@@ -37,7 +37,7 @@ public final class HippoClientBootstrapMap {
 
   public static boolean containsSubKey(String serviceName, String hostAndPort) {
     Map<String, HippoClientBootstrap> map = BOOTSTRAPMAP.get(serviceName);
-    if (map == null) {
+    if (map == null || map.isEmpty()) {
       return false;
     }
     return map.containsKey(hostAndPort);

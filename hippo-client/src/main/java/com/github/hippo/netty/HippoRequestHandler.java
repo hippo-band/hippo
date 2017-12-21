@@ -2,6 +2,9 @@ package com.github.hippo.netty;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.hippo.bean.HippoRequest;
 import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.callback.CallTypeHandler;
@@ -24,6 +27,9 @@ import io.netty.handler.timeout.IdleStateEvent;
  *
  */
 public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoResponse> {
+
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(HippoRequestHandler.class);
 
   private ConcurrentHashMap<String, HippoResultCallBack> callBackMap = new ConcurrentHashMap<>();
   private String serviceName;
@@ -82,9 +88,6 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     }
   }
 
-  /**
-   * 没想好是否要主动重连 下一个请求进来也是能重连的
-   */
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     super.channelInactive(ctx);
@@ -126,4 +129,16 @@ public class HippoRequestHandler extends SimpleChannelInboundHandler<HippoRespon
     hippoResponse.setChainOrder(hippoRequest.getChainOrder());
     return hippoResponse;
   }
+
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    LOGGER.error("netty client error", cause.fillInStackTrace());
+    HippoClientBootstrapMap.remove(serviceName, host, port);
+    ctx.close();
+    if (eventLoopGroup != null) {
+      eventLoopGroup.shutdownGracefully();
+    }
+  }
+
 }

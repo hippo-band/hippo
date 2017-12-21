@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cglib.reflect.FastClass;
@@ -47,7 +48,7 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
     response.setServiceName(request.getServiceName());
     HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
     if (hippoRequestEnum != HippoRequestEnum.PING) {
-      LOGGER.info("hippo in param:{}", request);
+      LOGGER.info("hippo in param:{}", ToStringBuilder.reflectionToString(request));
     }
     try {
       ChainThreadLocal.INSTANCE.setChainId(request.getChainId());

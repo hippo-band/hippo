@@ -31,6 +31,7 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
   private String serviceName;
   private HippoRequestHandler handler;
   private AtomicLong invokeTimes = new AtomicLong(0);
+  private NioEventLoopGroup eventLoopGroup;
 
 
 
@@ -42,9 +43,9 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
   }
 
   private void init() {
+    eventLoopGroup = new NioEventLoopGroup(1);
     try {
       Bootstrap bootstrap = new Bootstrap();
-      NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(1);
       handler = new HippoRequestHandler(this.serviceName, eventLoopGroup, this.host, this.port);
       bootstrap.group(eventLoopGroup);
       bootstrap.channel(NioSocketChannel.class);
@@ -102,5 +103,4 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     Long l2 = o.invokeTimes.get();
     return l1.compareTo(l2);
   }
-
 }

@@ -78,32 +78,30 @@ public class ServiceGovenImpl implements ServiceGovern {
     return regiestManager;
   }
 
+  private DiscoveryClient client;
+
   @Override
   public String getServiceAddress(String arg0) {
-    DiscoveryClient discoveryClient = getClient();
-
     try {
-      InstanceInfo instanceInfo = discoveryClient.getNextServerFromEureka(arg0, false);
+      InstanceInfo instanceInfo = getClient().getNextServerFromEureka(arg0, false);
       if (instanceInfo != null) {
         return instanceInfo.getIPAddr() + ":" + instanceInfo.getPort();
       }
     } catch (Exception e) {
+      shundown();
       LOGGER.error("can not get an instance of service from euraka server " + arg0, e);
       throw e;
-    } finally {
-      discoveryClient.shutdown();
     }
-    String defaultAddress = "";
-    try {
-      defaultAddress = InetAddress.getLocalHost().getHostAddress() + ":8761";
-    } catch (UnknownHostException e) {
-      LOGGER.error("return default address", e);
-    }
-    return defaultAddress;
+    return null;
   }
 
   private DiscoveryClient getClient() {
     synchronized (ServiceGovenImpl.class) {
+
+      if (client != null) {
+        return client;
+      }
+
       EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
       EurekaInstanceConfigBean eureInstanceConfigBean = new EurekaInstanceConfigBean();
       eureClientConfigBean.setRegisterWithEureka(false);
@@ -116,8 +114,10 @@ public class ServiceGovenImpl implements ServiceGovern {
       eureClientConfigBean.setAvailabilityZones(zones);
       eureClientConfigBean.setServiceUrl(serviceUrls);
 
-      return new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
+      client = new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
           eureClientConfigBean);
+
+      return client;
     }
   }
 
@@ -175,17 +175,28 @@ public class ServiceGovenImpl implements ServiceGovern {
 
   @Override
   public List<String> getServiceAddresses(String serviceName) {
-    DiscoveryClient discoveryClient = getClient();
     try {
       List<InstanceInfo> instancesByVipAddress =
-          discoveryClient.getInstancesByVipAddress(serviceName, false);
-      discoveryClient.shutdown();
+          getClient().getInstancesByVipAddress(serviceName, false);
       return instancesByVipAddress.stream().map(i -> i.getIPAddr() + ":" + i.getPort())
           .collect(Collectors.toList());
     } catch (Exception e) {
+      shundown();
+
       throw e;
-    } finally {
-      discoveryClient.shutdown();
+    }
+  }
+
+  private void shundown() {
+    if (client == null) {
+      return;
+    }
+    synchronized (ServiceGovenImpl.class) {
+      if (client == null) {
+        return;
+      }
+      client.shutdown();
+      client = null;
     }
 
   }

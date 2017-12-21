@@ -143,7 +143,7 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
   }
 
   static void createHippoHandler(String serviceName, String host, int port) {
-    synchronized (serviceName) {
+    synchronized (HippoClientInit.class) {
       if (checkServiceExist(serviceName, host, port)) {
         return;
       }
@@ -158,14 +158,7 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
   }
 
   private static boolean checkServiceExist(String serviceName, String host, int port) {
-    if (!HippoClientBootstrapMap.containsKey(serviceName)) {
-      return false;
-    }
-    Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
-    if (map == null || CollectionUtils.isEmpty(map.values())) {
-      return false;
-    }
-    return !HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
+    return HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
   }
 
 }
