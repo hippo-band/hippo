@@ -3,6 +3,7 @@ package com.github.hippo.client;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -129,6 +130,19 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
     if (CollectionUtils.isEmpty(serviceAddresses)) {
       return;
     }
+
+    Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
+    if (map != null && !map.isEmpty()) {
+      Iterator<HippoClientBootstrap> iterator = map.values().iterator();
+      while (iterator.hasNext()) {
+        HippoClientBootstrap next = iterator.next();
+        String key = next.getHost() + ":" + next.getPort();
+        if (!serviceAddresses.contains(key)) {
+          map.remove(key).shutdown();
+        }
+      }
+    }
+
     for (String serviceAddress : serviceAddresses) {
       String[] split = serviceAddress.split(":");
       String host = split[0];

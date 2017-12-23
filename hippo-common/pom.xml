@@ -4,7 +4,7 @@
 
 	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-common</artifactId>
-	<version>1.1.1</version>
+	<version>1.1.1-RELEASE</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -21,7 +21,7 @@
 		<slf4j.version>1.7.5</slf4j.version>
 		<apache.commons.lang3.version>3.1</apache.commons.lang3.version>
 		<netty.version>4.1.4.Final</netty.version>
-		<hippo.annotition.version>1.1.1</hippo.annotition.version>
+		<hippo.annotition.version>1.1.1-RELEASE</hippo.annotition.version>
 	</properties>
 	<licenses>
 		<license>

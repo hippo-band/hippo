@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-serviceGoven</artifactId>
-	<version>1.1.1</version>
+	<version>1.1.1-RELEASE</version>
 	<packaging>jar</packaging>
 
 
@@ -14,8 +14,8 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<hippo-common-version>1.1.1</hippo-common-version>
-		<eureka-version>1.8.6</eureka-version>
+		<hippo.common.version>1.1.1</hippo.common.version>
+		<eureka.version>1.8.6</eureka.version>
 	</properties>
 
 	<licenses>
@@ -44,57 +44,42 @@
 			<dependency>
 				<groupId>com.github.hippo-band</groupId>
 				<artifactId>hippo-common</artifactId>
-				<version>${hippo-common-version}</version>
+				<version>${hippo.common.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.netflix.eureka</groupId>
 				<artifactId>eureka-core</artifactId>
-				<version>${eureka-version}</version>
+				<version>${eureka.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.netflix.eureka</groupId>
 				<artifactId>eureka-client</artifactId>
-				<version>${eureka-version}</version>
+				<version>${eureka.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.inject</groupId>
 				<artifactId>javax.inject</artifactId>
 				<version>1</version>
+				<optional>true</optional>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-annotations</artifactId>
 				<version>2.8.7</version>
+				<optional>true</optional>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
 				<version>2.8.7</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.google.inject</groupId>
-				<artifactId>guice</artifactId>
-				<version>4.1.0</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.thoughtworks.xstream</groupId>
-				<artifactId>xstream</artifactId>
-				<version>1.4.10</version>
-			</dependency>
-
-
-			<dependency>
-				<groupId>com.netflix.servo</groupId>
-				<artifactId>servo-core</artifactId>
-				<version>0.10.1</version>
+				<optional>true</optional>
 			</dependency>
 
 			<dependency>
 				<groupId>com.netflix.archaius</groupId>
 				<artifactId>archaius-core</artifactId>
 				<version>0.7.5</version>
+				<optional>true</optional>
 			</dependency>
 
 
@@ -125,18 +110,6 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.netflix.servo</groupId>
-			<artifactId>servo-core</artifactId>
 		</dependency>
 
 		<dependency>
@@ -220,4 +193,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>

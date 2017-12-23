@@ -103,4 +103,10 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     Long l2 = o.invokeTimes.get();
     return l1.compareTo(l2);
   }
+
+  public void shutdown() {
+    if (eventLoopGroup != null && !eventLoopGroup.isShutdown()) {
+      eventLoopGroup.shutdownGracefully();
+    }
+  }
 }
