@@ -105,7 +105,8 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
   }
 
   public void shutdown() {
-    if (eventLoopGroup != null && !eventLoopGroup.isShutdown()) {
+    if (eventLoopGroup != null && !eventLoopGroup.isShutdown()
+        && !eventLoopGroup.isShuttingDown()) {
       eventLoopGroup.shutdownGracefully();
     }
   }
