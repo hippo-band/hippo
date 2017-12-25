@@ -2,6 +2,8 @@
 
 **Hippo: 一个基于java的微服务框架,配置简单、使用方便。**
 
+**Hippo1.1.1版本存在OOM BUG,已解决,修复版本为1.1.1-RELEASE。具体参考:http://www.holyshared.com/detail.html?issueId=5a3c7ac40cf28bf3bddfeb41**
+
 ### 快速开始 
 
 可以下载 [demo](https://github.com/hippo-band/hippo-demo) 进行测试,由于默认服务注册使用的是eureka,在测试Demo的时候需要先起一个eureka服务.具体查看 [https://github.com/hippo-band/hippo-demo](https://github.com/hippo-band/hippo-demo)
@@ -26,7 +28,7 @@ maven分的比较细,具体如下：
 
     <artifactId>hippo-annotation</artifactId>
 
-    <version>1.1.1</version>
+    <version>1.1.1-RELEASE</version>
 
 </dependency>
 ```
@@ -44,7 +46,7 @@ ps:hippo-server-with-eureka是集成了去eureka注册的相关代码
 
     <artifactId>hippo-server-with-eureka</artifactId>
 
-    <version>1.1.1</version>
+    <version>1.1.1-RELEASE</version>
 
 </dependency>
 ```
@@ -58,7 +60,7 @@ ps:hippo-cleint-with-eureka同样集成了去eureka获取注册信息的相关�
 <dependency>
     <groupId>com.github.hippo-band</groupId>
     <artifactId>hippo-client-with-eureka</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.1-RELEASE</version>
 </dependency>
 ```
 
