@@ -21,7 +21,7 @@ public class HippoResponse implements Serializable {
   private int chainOrder;
   private Object result;
   private Throwable throwable;
-  private boolean isError = false;// default if true result is HippoRequest for trace request param
+  private boolean isError = false;
 
   public String getServiceName() {
     return serviceName;
@@ -85,8 +85,8 @@ public class HippoResponse implements Serializable {
     String logResult = "null";
     if (result != null) {
       int index = result.toString().length();
-      if (index > 50) {
-        logResult = result.toString().substring(0, 50);
+      if (index > 150) {
+        logResult = result.toString().substring(0, 150);
       } else {
         logResult = result.toString();
       }

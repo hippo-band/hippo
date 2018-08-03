@@ -1,16 +1,10 @@
 package com.github.hippo.client;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
+import com.github.hippo.annotation.HippoClient;
+import com.github.hippo.annotation.HippoService;
+import com.github.hippo.govern.ServiceGovern;
+import com.github.hippo.netty.HippoClientBootstrap;
+import com.github.hippo.netty.HippoClientBootstrapMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,152 +21,170 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.CollectionUtils;
 
-import com.github.hippo.annotation.HippoClient;
-import com.github.hippo.annotation.HippoService;
-import com.github.hippo.govern.ServiceGovern;
-import com.github.hippo.netty.HippoClientBootstrap;
-import com.github.hippo.netty.HippoClientBootstrapMap;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 初始化有@RpcConsumer注解的类
- * 
- * @author sl
  *
+ * @author sl
  */
 @Configuration
 @Order(1)
 public class HippoClientInit implements ApplicationContextAware, InitializingBean {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HippoClientInit.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HippoClientInit.class);
 
-  private static ApplicationContext applicationContext;
+    private static ApplicationContext applicationContext;
 
-  private Map<String, Object> rpcConsumerMap = new HashMap<>();
-  @Autowired
-  private HippoProxy hippoProxy;
+    private Map<String, Object> rpcConsumerMap = new HashMap<>();
+    @Autowired
+    private HippoProxy hippoProxy;
 
-  @Autowired
-  private ServiceGovern serviceGovern;
+    @Autowired
+    private ServiceGovern serviceGovern;
 
-  private Set<String> serviceNames = new HashSet<>();
+    private Set<String> serviceNames = new HashSet<>();
+
+    private Set<String> classNames = new HashSet<>();
 
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        HippoClientInit.applicationContext = applicationContext;
+    }
 
-  @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    HippoClientInit.applicationContext = applicationContext;
-  }
+    @Bean
+    public BeanPostProcessor beanPostProcessor() {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessBeforeInitialization(Object bean, String beanName)
+                    throws BeansException {
+                Class<?> objClz = bean.getClass();
+                if (AopUtils.isAopProxy(bean)) {
+                    objClz = AopUtils.getTargetClass(bean);
+                }
+                for (Field field : objClz.getDeclaredFields()) {
+                    HippoClient hippoClient = field.getAnnotation(HippoClient.class);
+                    if (hippoClient != null) {
+                        Class<?> type = field.getType();
+                        String key = type.getCanonicalName();
+                        if (!rpcConsumerMap.containsKey(key)) {
+                            rpcConsumerMap.put(key, hippoProxy.create(type, hippoClient));
+                        }
+                        try {
+                            HippoService annotation = type.getAnnotation(HippoService.class);
+                            if (StringUtils.isNotBlank(hippoClient.serviceName())) {
+                            } else if (annotation != null) {
+                                serviceNames.add(annotation.serviceName());
+                            } else {
+                                classNames.add(objClz.getName());
+                            }
 
-  @Bean
-  public BeanPostProcessor beanPostProcessor() {
-    return new BeanPostProcessor() {
-      @Override
-      public Object postProcessBeforeInitialization(Object bean, String beanName)
-          throws BeansException {
-        Class<?> objClz = bean.getClass();
-        if (AopUtils.isAopProxy(bean)) {
-          objClz = AopUtils.getTargetClass(bean);
+                            field.setAccessible(true);
+                            field.set(bean, rpcConsumerMap.get(key));
+                            field.setAccessible(false);
+                        } catch (Exception e) {
+                            throw new BeanCreationException(beanName, e);
+                        }
+                    }
+                }
+                return bean;
+            }
+
+
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName)
+                    throws BeansException {
+                return bean;
+            }
+        };
+
+    }
+
+    public static ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        for (String className : classNames) {
+            String serviceNameByClassName = serviceGovern.getServiceNameByClassName(className);
+            if (serviceNameByClassName == null) {
+                LOGGER.warn("className[" + className + "] can not find serviceName");
+            } else {
+                serviceNames.add(serviceNameByClassName);
+                HippoClientCache.INSTANCE.getClassNameServiceNameMap().put(className, serviceNameByClassName);
+            }
         }
-        for (Field field : objClz.getDeclaredFields()) {
-          HippoClient hippoClient = field.getAnnotation(HippoClient.class);
-          if (hippoClient != null) {
-            Class<?> type = field.getType();
-            String key = type.getCanonicalName();
-            if (!rpcConsumerMap.containsKey(key)) {
-              rpcConsumerMap.put(key, hippoProxy.create(type, hippoClient));
+        classNames.clear();
+        ScheduledExecutorService newScheduledThreadPool = Executors.newScheduledThreadPool(1);
+        newScheduledThreadPool.scheduleAtFixedRate(() -> {
+            if (CollectionUtils.isEmpty(serviceNames)) {
+                return;
+            }
+            serviceNames.forEach(this::conntectionProcess);
+        }, 120, 25, TimeUnit.SECONDS);
+    }
+
+
+    private void conntectionProcess(String serviceName) {
+        List<String> serviceAddresses;
+        try {
+            serviceAddresses = serviceGovern.getServiceAddresses(serviceName);
+        } catch (Exception e) {
+            LOGGER.error("getServiceAddresses error:[" + serviceName + "],每10秒会重试", e);
+            return;
+        }
+        if (CollectionUtils.isEmpty(serviceAddresses)) {
+            return;
+        }
+
+        Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
+        if (map != null && !map.isEmpty()) {
+            Iterator<HippoClientBootstrap> iterator = map.values().iterator();
+            while (iterator.hasNext()) {
+                HippoClientBootstrap next = iterator.next();
+                String key = next.getHost() + ":" + next.getPort();
+                if (!serviceAddresses.contains(key)) {
+                    map.remove(key).shutdown();
+                }
+            }
+        }
+
+        for (String serviceAddress : serviceAddresses) {
+            String[] split = serviceAddress.split(":");
+            String host = split[0];
+            int port = Integer.parseInt(split[1]);
+            if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
+                LOGGER.warn("[%s]服务参数异常.host=%s,port=%s", serviceName, host, port);
+                continue;
+            }
+            createHippoHandler(serviceName, host, port);
+
+        }
+    }
+
+    static void createHippoHandler(String serviceName, String host, int port) {
+        synchronized (HippoClientInit.class) {
+            if (checkServiceExist(serviceName, host, port)) {
+                return;
             }
             try {
-              serviceNames.add(type.getAnnotation(HippoService.class).serviceName());
-              field.setAccessible(true);
-              field.set(bean, rpcConsumerMap.get(key));
-              field.setAccessible(false);
+                HippoClientBootstrap bootstrap = new HippoClientBootstrap(serviceName, host, port);
+                HippoClientBootstrapMap.put(serviceName, host, port, bootstrap);
             } catch (Exception e) {
-              throw new BeanCreationException(beanName, e);
+                LOGGER.error(e.getMessage(), e);
             }
-          }
         }
-        return bean;
-      }
-
-
-      @Override
-      public Object postProcessAfterInitialization(Object bean, String beanName)
-          throws BeansException {
-        return bean;
-      }
-    };
-
-  }
-
-  public static ApplicationContext getApplicationContext() {
-    return applicationContext;
-  }
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    ScheduledExecutorService newScheduledThreadPool = Executors.newScheduledThreadPool(1);
-    newScheduledThreadPool.scheduleAtFixedRate(() -> {
-      if (CollectionUtils.isEmpty(serviceNames)) {
-        return;
-      }
-      serviceNames.forEach(this::conntectionProcess);
-    }, 120, 15, TimeUnit.SECONDS);
-  }
-
-  private void conntectionProcess(String serviceName) {
-    List<String> serviceAddresses = null;
-    try {
-      serviceAddresses = serviceGovern.getServiceAddresses(serviceName);
-    } catch (Exception e) {
-      LOGGER.error("getServiceAddresses error:[" + serviceName + "],每10秒会重试", e);
-      return;
-    }
-    if (CollectionUtils.isEmpty(serviceAddresses)) {
-      return;
-    }
-
-    Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
-    if (map != null && !map.isEmpty()) {
-      Iterator<HippoClientBootstrap> iterator = map.values().iterator();
-      while (iterator.hasNext()) {
-        HippoClientBootstrap next = iterator.next();
-        String key = next.getHost() + ":" + next.getPort();
-        if (!serviceAddresses.contains(key)) {
-          map.remove(key).shutdown();
-        }
-      }
-    }
-
-    for (String serviceAddress : serviceAddresses) {
-      String[] split = serviceAddress.split(":");
-      String host = split[0];
-      int port = Integer.parseInt(split[1]);
-      if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
-        LOGGER.warn("[%s]服务参数异常.host=%s,port=%s", serviceName, host, port);
-        continue;
-      }
-      createHippoHandler(serviceName, host, port);
 
     }
-  }
 
-  static void createHippoHandler(String serviceName, String host, int port) {
-    synchronized (HippoClientInit.class) {
-      if (checkServiceExist(serviceName, host, port)) {
-        return;
-      }
-      try {
-        HippoClientBootstrap bootstrap = new HippoClientBootstrap(serviceName, host, port);
-        HippoClientBootstrapMap.put(serviceName, host, port, bootstrap);
-      } catch (Exception e) {
-        LOGGER.error(e.getMessage(), e);
-      }
+    private static boolean checkServiceExist(String serviceName, String host, int port) {
+        return HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
     }
-
-  }
-
-  private static boolean checkServiceExist(String serviceName, String host, int port) {
-    return HippoClientBootstrapMap.containsSubKey(serviceName, host + ":" + port);
-  }
 
 }

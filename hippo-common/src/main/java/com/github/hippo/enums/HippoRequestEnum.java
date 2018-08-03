@@ -9,7 +9,7 @@ public enum HippoRequestEnum {
   private int type;
   private String desc;
 
-  private HippoRequestEnum(int type, String desc) {
+  HippoRequestEnum(int type, String desc) {
     this.type = type;
     this.desc = desc;
   }

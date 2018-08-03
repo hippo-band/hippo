@@ -1,10 +1,10 @@
 package com.github.hippo.bean;
 
-import java.io.Serializable;
-
 import com.github.hippo.callback.CallType;
 import com.github.hippo.callback.ICallBack;
 import com.github.hippo.enums.HippoRequestEnum;
+
+import java.io.Serializable;
 
 
 /**
@@ -23,7 +23,7 @@ public class HippoRequest implements Serializable {
   private String requestId;
   private String chainId;
   private int chainOrder;
-  private Integer requestType = HippoRequestEnum.RPC.getType();// default
+  private Integer requestType = HippoRequestEnum.RPC.getType();
   private String className;
   private String methodName;
   private Class<?>[] parameterTypes;
