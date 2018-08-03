@@ -55,3 +55,7 @@ hs_err_pid*
 !**/share/*
 .idea
 .metadata
+
+hippo-client/src/test/java/com/github/hippo/test/RollingWindowTest.java
+
+hippo-client/src/test/java/com/github/hippo/test/Test.java

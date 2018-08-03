@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.hippo-band</groupId>
 	<artifactId>hippo-serviceGoven</artifactId>
-	<version>1.1.1-RELEASE</version>
+	<version>1.1.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 
@@ -14,30 +14,30 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<hippo.common.version>1.1.1-RELEASE</hippo.common.version>
+		<hippo.common.version>1.1.2-SNAPSHOT</hippo.common.version>
 		<eureka.version>1.8.6</eureka.version>
 	</properties>
 
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	<scm>
-		<tag>master</tag>
-		<url>https://github.com/hippo-band/hippo</url>
-		<connection>scm:git:https://github.com/hippo-band/hippo.git</connection>
-		<developerConnection>scm:git:https://github.com/hippo-band/hippo.git</developerConnection>
-	</scm>
-	<developers>
-		<developer>
-			<name>hippo</name>
-			<email>hippo_band@163.com</email>
-			<organization>hippo</organization>
-		</developer>
-	</developers>
+	<!--<licenses>-->
+		<!--<license>-->
+			<!--<name>The Apache Software License, Version 2.0</name>-->
+			<!--<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
+			<!--<distribution>repo</distribution>-->
+		<!--</license>-->
+	<!--</licenses>-->
+	<!--<scm>-->
+		<!--<tag>master</tag>-->
+		<!--<url>https://github.com/hippo-band/hippo</url>-->
+		<!--<connection>scm:git:https://github.com/hippo-band/hippo.git</connection>-->
+		<!--<developerConnection>scm:git:https://github.com/hippo-band/hippo.git</developerConnection>-->
+	<!--</scm>-->
+	<!--<developers>-->
+		<!--<developer>-->
+			<!--<name>hippo</name>-->
+			<!--<email>hippo_band@163.com</email>-->
+			<!--<organization>hippo</organization>-->
+		<!--</developer>-->
+	<!--</developers>-->
 
 	<dependencyManagement>
 		<dependencies>
@@ -119,22 +119,35 @@
 
 	</dependencies>
 
-	<profiles>
-		<profile>
-			<id>release</id>
+	<!--<profiles>-->
+		<!--<profile>-->
+			<!--<id>release</id>-->
 
-			<distributionManagement>
-				<snapshotRepository>
-					<id>oss</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</snapshotRepository>
-				<repository>
-					<id>oss</id>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-				</repository>
-			</distributionManagement>
-		</profile>
-	</profiles>
+			<!--<distributionManagement>-->
+				<!--<snapshotRepository>-->
+					<!--<id>oss</id>-->
+					<!--<url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
+				<!--</snapshotRepository>-->
+				<!--<repository>-->
+					<!--<id>oss</id>-->
+					<!--<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+				<!--</repository>-->
+			<!--</distributionManagement>-->
+		<!--</profile>-->
+	<!--</profiles>-->
+
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Releases</name>
+			<url>http://43.254.153.90:8081/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Snapshot</name>
+			<url>http://43.254.153.90:8081/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 	<build>
 		<plugins>
@@ -178,19 +191,19 @@
 			</plugin>
 
 			<!-- GPG -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.5</version>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+			<!--<plugin>-->
+				<!--<groupId>org.apache.maven.plugins</groupId>-->
+				<!--<artifactId>maven-gpg-plugin</artifactId>-->
+				<!--<version>1.5</version>-->
+				<!--<executions>-->
+					<!--<execution>-->
+						<!--<phase>verify</phase>-->
+						<!--<goals>-->
+							<!--<goal>sign</goal>-->
+						<!--</goals>-->
+					<!--</execution>-->
+				<!--</executions>-->
+			<!--</plugin>-->
 		</plugins>
 	</build>
 
