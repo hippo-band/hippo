@@ -49,6 +49,9 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
     @Value("${service.name:}")
     private String serviceName;
 
+    @Value("${hippo.server.thread.count}")
+    private int threadCount;
+
     private Map<String, String> metaMap = new HashMap<>();
 
     private Set<String> registryNames = new HashSet<>();
@@ -56,6 +59,9 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
 
     @Override
     public void setApplicationContext(ApplicationContext ctx) {
+        //init fixed theadcount
+        HippoServerThreadPool.FIXED.setThreadCount(threadCount);
+
         Map<String, Object> serviceBeanMap = ctx.getBeansWithAnnotation(HippoServiceImpl.class);
         if (MapUtils.isEmpty(serviceBeanMap)) {
             throw new HippoServiceException(

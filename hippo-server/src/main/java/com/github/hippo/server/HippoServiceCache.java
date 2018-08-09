@@ -2,6 +2,7 @@ package com.github.hippo.server;
 
 import org.springframework.cglib.reflect.FastClass;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ import java.util.Map;
  *
  * @author sl
  */
-public enum HippoServiceCache {
+enum HippoServiceCache {
 
     INSTANCE;
     private Map<String, Object> implObjectMap = new HashMap<>();
@@ -18,6 +19,8 @@ public enum HippoServiceCache {
     private Map<String, Class<?>> interfaceMap = new HashMap<>();
 
     private Map<String, FastClass> implClassMap = new HashMap<>();
+
+    private Map<String, Method> apiMethodMap = new HashMap<>();
 
     Map<String, Object> getImplObjectMap() {
         return implObjectMap;
@@ -30,5 +33,7 @@ public enum HippoServiceCache {
     Map<String, Class<?>> getInterfaceMap() {
         return interfaceMap;
     }
+
+    Map<String, Method> getApiMethodMap() {return apiMethodMap; }
 
 }

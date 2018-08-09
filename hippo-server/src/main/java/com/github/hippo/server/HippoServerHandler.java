@@ -22,8 +22,6 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * netty handler处理类
@@ -31,13 +29,9 @@ import java.util.concurrent.Executors;
  * @author sl
  */
 @Sharable
-public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
+class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HippoServerHandler.class);
-    private static final ExecutorService pool =
-            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 3 + 3);
-
-    private static final ExecutorService heartBeatPool = Executors.newSingleThreadExecutor();
 
     private void handle(ChannelHandlerContext ctx, HippoRequest request) {
         long start = System.currentTimeMillis();
@@ -99,52 +93,59 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
      */
     private Object apiProcess(HippoRequest paras) throws Exception {
 
+
+        Method _method = HippoServiceCache.INSTANCE.getApiMethodMap().get(paras.getClassName() + "-" + paras.getMethodName());
         Class<?> aClass = HippoServiceCache.INSTANCE.getInterfaceMap().get(paras.getClassName());
-
-        Method[] methods = aClass.getDeclaredMethods();
-        // 接口定义的method
-        for (Method method : methods) {
-            if (!method.getName().equals(paras.getMethodName())) {
-                continue;
-            }
-            Object[] paramDto;
-
-            Class<?>[] parameterTypes = method.getParameterTypes();
-
-            FastMethod serviceFastMethod = HippoServiceCache.INSTANCE.getImplClassMap().get(aClass.getName()).getMethod(method.getName(), parameterTypes);
-
-            String[] parameterNames = new LocalVariableTableParameterNameDiscoverer().getParameterNames(serviceFastMethod.getJavaMethod());
-
-            Object[] objects = paras.getParameters();
-            // 无参数
-            if (parameterTypes.length == 0 || objects == null) {
-                paramDto = null;
-            }
-            // 一个参数(是否是Dto)
-            else if (parameterTypes.length == 1) {
-                Class<?> parameterType = parameterTypes[0];
-                paramDto = new Object[1];
-                // 非自定义dto就是java原生类了
-                if (CommonUtils.isJavaClass(parameterType)) {
-                    paramDto[0] = covert(getMap(objects).get(parameterNames[0]), parameterType);
-                } else {
-                    paramDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) objects[0], parameterType);
+        if (_method == null) {
+            Method[] methods = aClass.getDeclaredMethods();
+            for (Method method : methods) {
+                if (!method.getName().equals(paras.getMethodName())) {
+                    continue;
                 }
+                _method = method;
+                HippoServiceCache.INSTANCE.getApiMethodMap().put(paras.getClassName() + "-" + paras.getMethodName(), method);
+                break;
             }
-            // 多参
-            else {
-                paramDto = new Object[parameterNames.length];
-                int index = 0;
-                Map<String, Object> map = getMap(objects);
-                for (String parameter : parameterNames) {
-                    paramDto[index] = covert(map.get(parameter), parameterTypes[index]);
-                    index++;
-                }
-            }
-            // 拿到返回
-            return FastJsonConvertUtils.cleanseToObject(serviceFastMethod.invoke(HippoServiceCache.INSTANCE.getImplObjectMap().get(aClass.getName()), paramDto));
         }
-        throw new NoSuchMethodException(paras.getMethodName());
+        if (_method == null) {
+            throw new NoSuchMethodException(paras.getClassName() + ":" + paras.getMethodName());
+        }
+        Object[] paramDto;
+
+        Class<?>[] parameterTypes = _method.getParameterTypes();
+
+        FastMethod serviceFastMethod = HippoServiceCache.INSTANCE.getImplClassMap().get(aClass.getName()).getMethod(_method.getName(), parameterTypes);
+
+        String[] parameterNames = new LocalVariableTableParameterNameDiscoverer().getParameterNames(serviceFastMethod.getJavaMethod());
+
+        Object[] objects = paras.getParameters();
+        // 无参数
+        if (parameterTypes.length == 0 || objects == null) {
+            paramDto = null;
+        }
+        // 一个参数(是否是Dto)
+        else if (parameterTypes.length == 1) {
+            Class<?> parameterType = parameterTypes[0];
+            paramDto = new Object[1];
+            // 非自定义dto就是java原生类了
+            if (CommonUtils.isJavaClass(parameterType)) {
+                paramDto[0] = covert(getMap(objects).get(parameterNames[0]), parameterType);
+            } else {
+                paramDto[0] = FastJsonConvertUtils.jsonToJavaObject((String) objects[0], parameterType);
+            }
+        }
+        // 多参
+        else {
+            paramDto = new Object[parameterNames.length];
+            int index = 0;
+            Map<String, Object> map = getMap(objects);
+            for (String parameter : parameterNames) {
+                paramDto[index] = covert(map.get(parameter), parameterTypes[index]);
+                index++;
+            }
+        }
+        // 拿到返回
+        return FastJsonConvertUtils.cleanseToObject(serviceFastMethod.invoke(HippoServiceCache.INSTANCE.getImplObjectMap().get(aClass.getName()), paramDto));
     }
 
     /**
@@ -193,9 +194,9 @@ public class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest
     protected void channelRead0(ChannelHandlerContext ctx, HippoRequest request) throws Exception {
         if (request != null && request.getRequestType() == HippoRequestEnum.PING.getType()) {
             // 单独的线程去执行心跳操作,业务请求不影响心跳
-            heartBeatPool.execute(() -> handle(ctx, request));
+            HippoServerThreadPool.SINGLE.getPool().execute(() -> handle(ctx, request));
         } else {
-            pool.execute(() -> handle(ctx, request));
+            HippoServerThreadPool.FIXED.getPool().execute(() -> handle(ctx, request));
         }
     }
 
