@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.reflect.FastClass;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,7 @@ import java.util.Set;
  */
 @Component
 @Order
+@Conditional(HippoServerCondition.class)
 public class HippoServerInit implements ApplicationContextAware, InitializingBean {
     private static final Logger LOG = LoggerFactory.getLogger(HippoServerInit.class);
     @Autowired
