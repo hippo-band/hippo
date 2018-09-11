@@ -21,6 +21,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,10 +32,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 服务注册以及启动netty server
@@ -43,7 +41,6 @@ import java.util.Set;
  */
 @Component
 @Order
-@Conditional(HippoServerCondition.class)
 public class HippoServerInit implements ApplicationContextAware, InitializingBean {
     private static final Logger LOG = LoggerFactory.getLogger(HippoServerInit.class);
     @Autowired
@@ -65,16 +62,19 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
         HippoServerThreadPool.FIXED.setThreadCount(threadCount);
 
         Map<String, Object> serviceBeanMap = ctx.getBeansWithAnnotation(HippoServiceImpl.class);
+
         if (MapUtils.isEmpty(serviceBeanMap)) {
             throw new HippoServiceException(
                     "该项目依赖了hippo-server,在接口实现类请使用[@HippoServiceImpl]来声明");
         }
+
         Map<String, Object> implObjectMap = HippoServiceCache.INSTANCE.getImplObjectMap();
         Map<String, FastClass> implClassMap = HippoServiceCache.INSTANCE.getImplClassMap();
         Map<String, Class<?>> interfaceMap = HippoServiceCache.INSTANCE.getInterfaceMap();
         for (Object serviceBean : serviceBeanMap.values()) {
             String simpleName = null;
-            Class<?>[] interfaces = serviceBean.getClass().getInterfaces();
+            Class<?> clazz = AopUtils.isAopProxy(serviceBean)?AopUtils.getTargetClass(serviceBean):serviceBean.getClass();
+            Class<?>[] interfaces = clazz.getInterfaces();
             int index = 0;
             for (Class<?> class1 : interfaces) {
                 //兼容@HippoService方式
