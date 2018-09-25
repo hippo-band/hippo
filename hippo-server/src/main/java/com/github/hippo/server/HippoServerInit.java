@@ -48,7 +48,7 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
     @Value("${service.name:}")
     private String serviceName;
 
-    @Value("${hippo.server.thread.count}")
+    @Value("${hippo.server.thread.count:0}")
     private int threadCount;
 
     private Map<String, String> metaMap = new HashMap<>();

@@ -1,84 +1,37 @@
 package com.github.hippo.util;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.objenesis.Objenesis;
-import org.objenesis.ObjenesisStd;
-import com.dyuproject.protostuff.LinkedBuffer;
-import com.dyuproject.protostuff.ProtostuffIOUtil;
-import com.dyuproject.protostuff.Schema;
-import com.dyuproject.protostuff.runtime.RuntimeSchema;
-
+import org.nustaq.serialization.FSTConfiguration;
 
 
 /**
- * 序列化工具 protostuff
- * 
- * @author sl
+ * 序列化工具 fst
  *
+ * @author sl
  */
 public class SerializationUtils {
-  private static Map<Class<?>, Schema<?>> cachedSchema = new ConcurrentHashMap<>();
 
-  private static Objenesis objenesis = new ObjenesisStd(true);
+    static FSTConfiguration configuration = FSTConfiguration.createStructConfiguration();
 
-  private SerializationUtils() {}
-
-  /**
-   * getSchema
-   * 
-   * @param cls origin class
-   * @param <T> 泛型
-   * @return Schema
-   */
-  @SuppressWarnings("unchecked")
-  private static <T> Schema<T> getSchema(Class<T> cls) {
-    Schema<T> schema = (Schema<T>) cachedSchema.get(cls);
-    if (schema == null) {
-      schema = RuntimeSchema.createFrom(cls);
-      if (schema != null) {
-        cachedSchema.put(cls, schema);
-      }
+    /**
+     * 序列化
+     *
+     * @param obj obj
+     * @param <T> 泛型
+     * @return data[]
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> byte[] serialize(T obj) {
+        return configuration.asByteArray(obj);
     }
-    return schema;
-  }
 
-  /**
-   * 序列化
-   * 
-   * @param obj obj
-   * @param <T> 泛型
-   * @return data[]
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> byte[] serialize(T obj) {
-    Class<T> cls = (Class<T>) obj.getClass();
-    LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-    try {
-      return ProtostuffIOUtil.toByteArray(obj, getSchema(cls), buffer);
-    } catch (Exception e) {
-      throw new IllegalStateException(e.getMessage(), e);
-    } finally {
-      buffer.clear();
+    /**
+     * 反序列化
+     *
+     * @param data origin data
+     * @return cls.instance
+     */
+    public static <T> T deserialize(byte[] data) {
+        return (T) configuration.asObject(data);
     }
-  }
-
-  /**
-   * 反序列化
-   * 
-   * @param data origin data
-   * @param cls obj
-   * @return cls.instance
-   */
-  public static <T> T deserialize(byte[] data, Class<T> cls) {
-    try {
-      T message = objenesis.newInstance(cls);
-      ProtostuffIOUtil.mergeFrom(data, message, getSchema(cls));
-      return message;
-    } catch (Exception e) {
-      throw new IllegalStateException(e.getMessage(), e);
-    }
-  }
 
 }
