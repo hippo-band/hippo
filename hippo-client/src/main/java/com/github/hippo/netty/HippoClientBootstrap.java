@@ -66,15 +66,18 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     public HippoResultCallBack sendAsync(HippoRequest request, int timeout) {
         HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
         this.handler.sendAsync(hippoResultCallBack);
+        this.invokeTimes.decrementAndGet();
         return hippoResultCallBack;
     }
 
     public HippoResponse sendWithCallBack(HippoRequest request, int timeout) {
         HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
+        this.invokeTimes.decrementAndGet();
         return this.handler.sendWithCallBack(hippoResultCallBack);
     }
 
     public HippoResponse sendOneWay(HippoRequest hippoRequest) {
+        this.invokeTimes.decrementAndGet();
         return this.handler.sendOneWay(hippoRequest);
     }
 

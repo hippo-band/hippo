@@ -156,6 +156,9 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
      * @return 转换后的数据
      */
     private Object covert(Object o, Class<?> parameterType) {
+        if(o==null){
+            return null;
+        }
         String param = String.valueOf(o);
         if (parameterType == long.class || parameterType == Long.class) {
             return Long.valueOf(param);

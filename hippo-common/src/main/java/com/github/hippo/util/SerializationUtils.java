@@ -1,8 +1,5 @@
 package com.github.hippo.util;
 
-import org.nustaq.serialization.FSTConfiguration;
-
-
 /**
  * 序列化工具 fst
  *
@@ -10,7 +7,10 @@ import org.nustaq.serialization.FSTConfiguration;
  */
 public class SerializationUtils {
 
-    static FSTConfiguration configuration = FSTConfiguration.createStructConfiguration();
+
+    private SerializationUtils() {
+    }
+
 
     /**
      * 序列化
@@ -21,17 +21,19 @@ public class SerializationUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> byte[] serialize(T obj) {
-        return configuration.asByteArray(obj);
+        return org.springframework.util.SerializationUtils.serialize(obj);
     }
 
     /**
      * 反序列化
      *
      * @param data origin data
+     * @param cls  obj
      * @return cls.instance
      */
-    public static <T> T deserialize(byte[] data) {
-        return (T) configuration.asObject(data);
+    public static <T> T deserialize(byte[] data, Class<T> cls) {
+        return (T) org.springframework.util.SerializationUtils.deserialize(data);
     }
+
 
 }

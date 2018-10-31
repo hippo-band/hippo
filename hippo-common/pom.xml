@@ -15,6 +15,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.3.1.RELEASE</spring.version>
         <fastjson.version>1.2.36</fastjson.version>
+        <protostuff.version>1.0.10</protostuff.version>
+        <objenesis.version>2.4</objenesis.version>
         <logback.version>1.1.2</logback.version>
         <slf4j.version>1.7.5</slf4j.version>
         <fst.version>2.57</fst.version>
@@ -46,6 +48,21 @@
 
     <dependencyManagement>
         <dependencies>
+            <!--<dependency>-->
+                <!--<groupId>com.dyuproject.protostuff</groupId>-->
+                <!--<artifactId>protostuff-core</artifactId>-->
+                <!--<version>${protostuff.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>com.dyuproject.protostuff</groupId>-->
+                <!--<artifactId>protostuff-runtime</artifactId>-->
+                <!--<version>${protostuff.version}</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>org.objenesis</groupId>-->
+                <!--<artifactId>objenesis</artifactId>-->
+                <!--<version>${objenesis.version}</version>-->
+            <!--</dependency>-->
             <dependency>
                 <groupId>com.github.hippo-band</groupId>
                 <artifactId>hippo-annotation</artifactId>
@@ -62,11 +79,11 @@
                 <version>${spring.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>de.ruedigermoeller</groupId>
-                <artifactId>fst</artifactId>
-                <version>${fst.version}</version>
-            </dependency>
+            <!--<dependency>-->
+                <!--<groupId>de.ruedigermoeller</groupId>-->
+                <!--<artifactId>fst</artifactId>-->
+                <!--<version>${fst.version}</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>com.alibaba</groupId>
@@ -98,10 +115,23 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${apache.commons.lang3.version}</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+        <!--<dependency>-->
+            <!--<groupId>com.dyuproject.protostuff</groupId>-->
+            <!--<artifactId>protostuff-core</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>com.dyuproject.protostuff</groupId>-->
+            <!--<artifactId>protostuff-runtime</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.objenesis</groupId>-->
+            <!--<artifactId>objenesis</artifactId>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
@@ -138,10 +168,11 @@
             <groupId>com.github.hippo-band</groupId>
             <artifactId>hippo-annotation</artifactId>
         </dependency>
-        <dependency>
-            <groupId>de.ruedigermoeller</groupId>
-            <artifactId>fst</artifactId>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>de.ruedigermoeller</groupId>-->
+            <!--<artifactId>fst</artifactId>-->
+        <!--</dependency>-->
+
     </dependencies>
 
 

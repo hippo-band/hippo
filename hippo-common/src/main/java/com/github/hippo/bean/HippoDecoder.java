@@ -38,6 +38,6 @@ public class HippoDecoder extends ByteToMessageDecoder {
         }
         byte[] data = new byte[dataLength];
         in.readBytes(data);
-        out.add(SerializationUtils.deserialize(data));
+        out.add(SerializationUtils.deserialize(data,genericClass));
     }
 }
