@@ -52,4 +52,7 @@ public interface ServiceGovern {
      */
     List<String> getServiceAddresses(String serviceName);
 
+
+    void shutdown();
+
 }
