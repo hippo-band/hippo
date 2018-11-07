@@ -90,7 +90,7 @@ public class ServiceGovenImpl implements ServiceGovern {
             }
         } catch (Exception e) {
             LOGGER.error("can not get an instance of service from euraka server " + arg0, e);
-            shundown();
+            shutdown();
         }
         return "";
     }
@@ -103,7 +103,7 @@ public class ServiceGovenImpl implements ServiceGovern {
         try {
             return getMetaMap().get(className);
         } catch (Exception e) {
-            shundown();
+            shutdown();
         }
         return null;
     }
@@ -139,10 +139,8 @@ public class ServiceGovenImpl implements ServiceGovern {
             eureClientConfigBean.setAvailabilityZones(zones);
             eureClientConfigBean.setServiceUrl(serviceUrls);
 
-            client = new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
+            return new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
                     eureClientConfigBean);
-
-            return client;
         }
     }
 
@@ -192,7 +190,7 @@ public class ServiceGovenImpl implements ServiceGovern {
                 Map<String, String> metaMap1 = getMetaMap();
                 for (String key : metaMap.keySet()) {
                     if (metaMap1.get(key) != null && !metaMap1.get(key).equals(arg0)) {
-                        shundown();
+                        shutdown();
                         throw new HippoServiceException("服务注册异常,原因:[" + key + "]已被注册");
                     }
                 }
@@ -206,7 +204,7 @@ public class ServiceGovenImpl implements ServiceGovern {
             serviceUrls.put(zone, serviceUrl);
             eureClientConfigBean.setAvailabilityZones(zones);
             eureClientConfigBean.setServiceUrl(serviceUrls);
-            DiscoveryClient client = new DiscoveryClient(
+            client = new DiscoveryClient(
                     initializeRegiestApplicationInfoManager(eureInstanceConfigBean), eureClientConfigBean);
             client.getApplicationInfoManager().setInstanceStatus(InstanceStatus.UP);
             int nonSecurePort = eureInstanceConfigBean.getNonSecurePort();
@@ -223,12 +221,13 @@ public class ServiceGovenImpl implements ServiceGovern {
             return instancesByVipAddress.stream().map(i -> i.getIPAddr() + ":" + i.getPort())
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            shundown();
+            shutdown();
         }
         return Collections.emptyList();
     }
 
-    private void shundown() {
+    @Override
+    public void shutdown() {
         if (client == null) {
             return;
         }
