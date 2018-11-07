@@ -79,18 +79,20 @@ public class ServiceGovenImpl implements ServiceGovern {
         return regiestManager;
     }
 
-    private DiscoveryClient client;
+    private DiscoveryClient registerClient;
+
+    private DiscoveryClient discoveryClient;
 
     @Override
     public String getServiceAddress(String arg0) {
         try {
-            InstanceInfo instanceInfo = getClient().getNextServerFromEureka(arg0, false);
+            InstanceInfo instanceInfo = getDiscoverClient().getNextServerFromEureka(arg0, false);
             if (instanceInfo != null) {
                 return instanceInfo.getIPAddr() + ":" + instanceInfo.getPort();
             }
         } catch (Exception e) {
             LOGGER.error("can not get an instance of service from euraka server " + arg0, e);
-            shutdown();
+            discoveryShutdown();
         }
         return "";
     }
@@ -103,13 +105,13 @@ public class ServiceGovenImpl implements ServiceGovern {
         try {
             return getMetaMap().get(className);
         } catch (Exception e) {
-            shutdown();
+            discoveryShutdown();
         }
         return null;
     }
 
     private Map<String, String> getMetaMap() {
-        List<Application> registeredApplications = getClient().getApplications().getRegisteredApplications();
+        List<Application> registeredApplications = getDiscoverClient().getApplications().getRegisteredApplications();
         Map<String, String> metadata = new HashMap<>();
         for (Application app : registeredApplications) {
             for (InstanceInfo info :
@@ -120,11 +122,11 @@ public class ServiceGovenImpl implements ServiceGovern {
         return metadata;
     }
 
-    private DiscoveryClient getClient() {
+    private DiscoveryClient getDiscoverClient() {
         synchronized (ServiceGovenImpl.class) {
 
-            if (client != null) {
-                return client;
+            if (discoveryClient != null) {
+                return discoveryClient;
             }
 
             EurekaClientConfigBean eureClientConfigBean = new EurekaClientConfigBean();
@@ -190,7 +192,7 @@ public class ServiceGovenImpl implements ServiceGovern {
                 Map<String, String> metaMap1 = getMetaMap();
                 for (String key : metaMap.keySet()) {
                     if (metaMap1.get(key) != null && !metaMap1.get(key).equals(arg0)) {
-                        shutdown();
+                        discoveryShutdown();
                         throw new HippoServiceException("服务注册异常,原因:[" + key + "]已被注册");
                     }
                 }
@@ -204,9 +206,9 @@ public class ServiceGovenImpl implements ServiceGovern {
             serviceUrls.put(zone, serviceUrl);
             eureClientConfigBean.setAvailabilityZones(zones);
             eureClientConfigBean.setServiceUrl(serviceUrls);
-            client = new DiscoveryClient(
+            registerClient = new DiscoveryClient(
                     initializeRegiestApplicationInfoManager(eureInstanceConfigBean), eureClientConfigBean);
-            client.getApplicationInfoManager().setInstanceStatus(InstanceStatus.UP);
+            registerClient.getApplicationInfoManager().setInstanceStatus(InstanceStatus.UP);
             int nonSecurePort = eureInstanceConfigBean.getNonSecurePort();
             LOGGER.info(arg0 + "------------注册成功------------port:" + nonSecurePort);
             return nonSecurePort;
@@ -217,26 +219,40 @@ public class ServiceGovenImpl implements ServiceGovern {
     public List<String> getServiceAddresses(String serviceName) {
         try {
             List<InstanceInfo> instancesByVipAddress =
-                    getClient().getInstancesByVipAddress(serviceName, false);
+                    getDiscoverClient().getInstancesByVipAddress(serviceName, false);
             return instancesByVipAddress.stream().map(i -> i.getIPAddr() + ":" + i.getPort())
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            shutdown();
+            discoveryShutdown();
         }
         return Collections.emptyList();
     }
 
     @Override
     public void shutdown() {
-        if (client == null) {
+        if (registerClient == null) {
             return;
         }
         synchronized (ServiceGovenImpl.class) {
-            if (client == null) {
+            if (registerClient == null) {
                 return;
             }
-            client.shutdown();
-            client = null;
+            registerClient.shutdown();
+            registerClient = null;
+        }
+
+    }
+
+    private void discoveryShutdown() {
+        if (discoveryClient == null) {
+            return;
+        }
+        synchronized (ServiceGovenImpl.class) {
+            if (discoveryClient == null) {
+                return;
+            }
+            discoveryClient.shutdown();
+            discoveryClient = null;
         }
 
     }
