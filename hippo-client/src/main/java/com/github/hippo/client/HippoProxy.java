@@ -11,11 +11,16 @@ import com.github.hippo.enums.HippoRequestEnum;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.hystrix.HippoCommand;
 import com.github.hippo.netty.HippoClientBootstrapMap;
+import com.github.hippo.zipkin.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -28,6 +33,12 @@ public class HippoProxy {
 
     @Autowired
     private ServiceGovern serviceGovern;
+
+    @Value("${service.name:}")
+    private String currentServiceName;
+
+    @Autowired(required = false)
+    private ZipkinRecordService zipkinRecordService;
 
     @SuppressWarnings("unchecked")
     <T> T create(Class<?> inferfaceClass, HippoClient hippoClient) {
@@ -58,28 +69,9 @@ public class HippoProxy {
                         request.setiCallBack(callBack.getiCallBack());
                         request.setCallType(callBack.getCallType());
                     }
-                    ChainThreadLocal.INSTANCE.clearTL();
-                    HippoCommand hippoCommand =
-                            new HippoCommand(request, hippoClient.timeout(), hippoClient.retryTimes(),
-                                    hippoClient.isCircuitBreaker(), hippoClient.semaphoreMaxConcurrentRequests(),
-                                    hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled());
-                    HippoResponse hippoResponse;
-                    // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
-                    if (HippoClientBootstrapMap.get(serviceName) == null
-                            || HippoClientBootstrapMap.get(serviceName).isEmpty()) {
-                        conntectionOne(serviceName);
-                    }
-                    if (hippoClient.isUseHystrix() || hippoClient.isCircuitBreaker()) {
-                        hippoResponse = (HippoResponse) hippoCommand.execute();
-                    } else {
-                        hippoResponse = hippoCommand.getHippoResponse(request, hippoClient.timeout(),
-                                hippoClient.retryTimes());
-                    }
-                    if (hippoResponse.isError()) {
-                        throw hippoResponse.getThrowable();
-                    } else {
-                        return hippoResponse.getResult();
-                    }
+                    return commonInvoke(request, hippoClient.timeout(), hippoClient.retryTimes(),
+                            hippoClient.isCircuitBreaker(), hippoClient.semaphoreMaxConcurrentRequests(),
+                            hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled(), hippoClient.isUseHystrix(), currentServiceName);
                 });
     }
 
@@ -130,29 +122,93 @@ public class HippoProxy {
             request.setiCallBack(callBack.getiCallBack());
             request.setCallType(callBack.getCallType());
         }
-        ChainThreadLocal.INSTANCE.clearTL();
-
-        // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
-        if (HippoClientBootstrapMap.get(serviceName) == null
-                || HippoClientBootstrapMap.get(serviceName).isEmpty()) {
-            conntectionOne(serviceName);
-        }
-
-        HippoCommand hippoCommand = new HippoCommand(request, timeout, retryTimes, isCircuitBreaker,
+        return commonInvoke(request, timeout, retryTimes, isCircuitBreaker,
                 semaphoreMaxConcurrentRequests == 0 ? 10 : semaphoreMaxConcurrentRequests, hippoFailPolicy,
-                fallbackEnable);
-        HippoResponse hippoResponse = (HippoResponse) hippoCommand.execute();
+                fallbackEnable, isCircuitBreaker, currentServiceName);
+    }
+
+    private Object commonInvoke(HippoRequest request, int timeout, int retryTimes, boolean isCircuitBreaker, int semaphoreMaxConcurrentRequests, Class<?> hippoFailPolicy, boolean fallbackEnable, boolean isUseHystrix, String currentServiceName) throws Throwable {
+        ZipkinData zipkinData = null;
+        if (zipkinRecordService != null) {
+            zipkinData = fillZipkinData(request, currentServiceName);
+        }
+        ZipkinResp zipkinResp = ZipkinUtils.zipkinRecordStart(zipkinData, zipkinRecordService);
+        if (zipkinResp != null) {
+            request.setChainId(zipkinResp.getParentTraceId());
+            request.setRequestId(zipkinResp.getParentSpanId());
+        }
+        ChainThreadLocal.INSTANCE.clearTL();
+        HippoCommand hippoCommand =
+                new HippoCommand(request, timeout, retryTimes,
+                        isCircuitBreaker, semaphoreMaxConcurrentRequests,
+                        hippoFailPolicy, fallbackEnable);
+        HippoResponse hippoResponse;
+        // 由于长连接是由定时器线程去持续获得,那如果是junit或者有些请求已经到来也需要获取连接来处理数据
+        if (HippoClientBootstrapMap.get(request.getServiceName()) == null
+                || HippoClientBootstrapMap.get(request.getServiceName()).isEmpty()) {
+            conntectionOne(request.getServiceName());
+        }
+        try {
+            if (isUseHystrix || isCircuitBreaker) {
+                hippoResponse = (HippoResponse) hippoCommand.execute();
+            } else {
+                hippoResponse = hippoCommand.getHippoResponse(request, timeout,
+                        retryTimes);
+
+            }
+        } catch (Exception e) {
+            ZipkinUtils.zipkinRecordError(zipkinRecordService, e);
+            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+            throw e;
+        }
         if (hippoResponse.isError()) {
+            ZipkinUtils.zipkinRecordError(zipkinRecordService, hippoResponse.getThrowable());
+            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
             throw hippoResponse.getThrowable();
         } else {
+            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
             return hippoResponse.getResult();
         }
+    }
+
+    private ZipkinData fillZipkinData(HippoRequest request, String currentServiceName) {
+        ZipkinData zipkinData = new ZipkinData();
+
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        String className;
+        String methodName;
+        if (request.getRequestType() == HippoRequestEnum.API.getType()) {
+            className = stackTrace[5].getClassName();
+            methodName = stackTrace[5].getMethodName();
+        } else {
+            className = stackTrace[4].getClassName();
+            methodName = stackTrace[4].getMethodName();
+        }
+        zipkinData.setServiceName(StringUtils.isBlank(currentServiceName) ? className + ":" + methodName : currentServiceName);
+        zipkinData.setMethodName(methodName);
+        zipkinData.setSpanKind(SpanKind.CLIENT);
+        zipkinData.setAnnotate(ToStringBuilder.reflectionToString(request.getParameters()));
+        Map<String, String> tagMap = new HashMap<>();
+        tagMap.put("className", className);
+        tagMap.put("methodName", methodName);
+        tagMap.put("callType", request.getCallType().name());
+        tagMap.put("nextServiceName", request.getServiceName());
+        tagMap.put("nextClassName", request.getClassName());
+        tagMap.put("nextMethodName", request.getMethodName());
+        if (StringUtils.isBlank(currentServiceName)) {
+            tagMap.put("tips", "可在配置文件里配置service.name代替类名+方法名");
+        }
+        zipkinData.setTags(tagMap);
+        if (request.getChainOrder() != 1) {
+            zipkinData.setParentSpanId(Long.parseLong(request.getRequestId(), 16));
+            zipkinData.setParentTraceId(Long.parseLong(request.getChainId(), 16));
+        }
+        return zipkinData;
     }
 
     public Object apiRequest(String serviceName, String serviceMethod, Object parameter)
             throws Throwable {
         return apiRequest(serviceName, serviceMethod, parameter, 5000, 0, true, 10, false, null);
     }
-
 
 }

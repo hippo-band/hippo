@@ -9,6 +9,7 @@ import com.github.hippo.bean.HippoResponse;
 import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.govern.ServiceGovern;
 import com.github.hippo.util.CommonUtils;
+import com.github.hippo.zipkin.ZipkinRecordService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -57,6 +58,9 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
 
     private Set<String> registryNames = new HashSet<>();
 
+    @Autowired(required = false)
+    private ZipkinRecordService zipkinRecordService;
+
 
     @Override
     public void setApplicationContext(ApplicationContext ctx) {
@@ -75,7 +79,7 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
         Map<String, Class<?>> interfaceMap = HippoServiceCache.INSTANCE.getInterfaceMap();
         for (Object serviceBean : serviceBeanMap.values()) {
             String simpleName = null;
-            Class<?> clazz = AopUtils.isAopProxy(serviceBean)?AopUtils.getTargetClass(serviceBean):serviceBean.getClass();
+            Class<?> clazz = AopUtils.isAopProxy(serviceBean) ? AopUtils.getTargetClass(serviceBean) : serviceBean.getClass();
             Class<?>[] interfaces = clazz.getInterfaces();
             int index = 0;
             for (Class<?> class1 : interfaces) {
@@ -124,6 +128,11 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
         //@HippoService优先级高于在*.properties里配置
         if (!registryNames.isEmpty()) {
             serviceName = registryNames.iterator().next();
+        }
+
+        if (zipkinRecordService != null) {
+            HippoServiceCache.INSTANCE.getZipkinCache().setServiceName(serviceName);
+            HippoServiceCache.INSTANCE.getZipkinCache().setZipkinRecordService(zipkinRecordService);
         }
 
         new Thread(this::run).start();

@@ -8,9 +8,14 @@ import com.github.hippo.exception.HippoRequestTypeNotExistException;
 import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.util.CommonUtils;
 import com.github.hippo.util.FastJsonConvertUtils;
+import com.github.hippo.zipkin.SpanKind;
+import com.github.hippo.zipkin.ZipkinData;
+import com.github.hippo.zipkin.ZipkinRecordService;
+import com.github.hippo.zipkin.ZipkinUtils;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +44,10 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
         response.setChainId(request.getChainId());
         response.setChainOrder(request.getChainOrder());
         response.setServiceName(request.getServiceName());
+
         HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
         if (hippoRequestEnum != HippoRequestEnum.PING) {
+            zipkinStart(request);
             LOGGER.info("hippo start chainId:{},in param:{}", request.getChainId(), ToStringBuilder.reflectionToString(request));
         }
         try {
@@ -73,10 +80,48 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
         }
         ChainThreadLocal.INSTANCE.clearTL();
         if (hippoRequestEnum != HippoRequestEnum.PING) {
+            zipkinFinish(response);
             LOGGER.info("hippo end chainId:{} out result:{},耗时:{}毫秒", request.getChainId(), response, System.currentTimeMillis() - start);
         }
 
         ctx.writeAndFlush(response);
+    }
+
+    private void zipkinFinish(HippoResponse response) {
+        ZipkinCache zipkinCache = HippoServiceCache.INSTANCE.getZipkinCache();
+        if (StringUtils.isNotBlank(zipkinCache.getServiceName()) && zipkinCache.getZipkinRecordService() != null) {
+            ZipkinRecordService zipkinRecordService = zipkinCache.getZipkinRecordService();
+            if (response.isError()) {
+                ZipkinUtils.zipkinRecordError(zipkinRecordService, response.getThrowable());
+            }
+            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+        }
+    }
+
+    private void zipkinStart(HippoRequest request) {
+        ZipkinCache zipkinCache = HippoServiceCache.INSTANCE.getZipkinCache();
+        if (StringUtils.isNotBlank(zipkinCache.getServiceName()) && zipkinCache.getZipkinRecordService() != null) {
+            String currentServiceName = zipkinCache.getServiceName();
+            ZipkinRecordService zipkinRecordService = zipkinCache.getZipkinRecordService();
+            ZipkinData zipkinData = fillZipkinData(request, currentServiceName);
+            ZipkinUtils.zipkinRecordStart(zipkinData, zipkinRecordService);
+        }
+    }
+
+    private ZipkinData fillZipkinData(HippoRequest request, String currentServiceName) {
+        ZipkinData zipkinData = new ZipkinData();
+        zipkinData.setServiceName(currentServiceName);
+        zipkinData.setMethodName(request.getMethodName());
+        zipkinData.setSpanKind(SpanKind.SERVER);
+        zipkinData.setAnnotate(ToStringBuilder.reflectionToString(request.getParameters()));
+        Map<String, String> tagMap = new HashMap<>();
+        tagMap.put("className", request.getClassName());
+        tagMap.put("methodName", request.getMethodName());
+        tagMap.put("requestType", HippoRequestEnum.getByType(request.getRequestType()).name());
+        zipkinData.setTags(tagMap);
+        zipkinData.setParentSpanId(Long.parseLong(request.getRequestId(), 16));
+        zipkinData.setParentTraceId(Long.parseLong(request.getChainId(), 16));
+        return zipkinData;
     }
 
     private Object rpcProcess(HippoRequest paras) throws InvocationTargetException {
@@ -156,7 +201,7 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
      * @return 转换后的数据
      */
     private Object covert(Object o, Class<?> parameterType) {
-        if(o==null){
+        if (o == null) {
             return null;
         }
         String param = String.valueOf(o);

@@ -22,6 +22,8 @@ enum HippoServiceCache {
 
     private Map<String, Method> apiMethodMap = new HashMap<>();
 
+    private ZipkinCache zipkinCache = new ZipkinCache();
+
     Map<String, Object> getImplObjectMap() {
         return implObjectMap;
     }
@@ -35,5 +37,7 @@ enum HippoServiceCache {
     }
 
     Map<String, Method> getApiMethodMap() {return apiMethodMap; }
+
+    ZipkinCache getZipkinCache() {return zipkinCache; }
 
 }

@@ -20,7 +20,13 @@ public class HippoRequest implements Serializable {
    */
   private static final long serialVersionUID = 8703973176164750873L;
   private String serviceName;
+  /**
+   * zipkin里的spanId
+   */
   private String requestId;
+  /**
+   * zipkin里的traceId
+   */
   private String chainId;
   private int chainOrder;
   private Integer requestType = HippoRequestEnum.RPC.getType();
