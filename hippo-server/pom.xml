@@ -48,11 +48,11 @@
                 <artifactId>hippo-common</artifactId>
                 <version>${hippo.common.version}</version>
             </dependency>
-            <!--<dependency>-->
-                <!--<groupId>com.github.hippo-band</groupId>-->
-                <!--<artifactId>hippo-zipkin</artifactId>-->
-                <!--<version>${hippo.zipkin.version}</version>-->
-            <!--</dependency>-->
+            <dependency>
+                <groupId>com.github.hippo-band</groupId>
+                <artifactId>hippo-zipkin</artifactId>
+                <version>${hippo.zipkin.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.github.hippo-band</groupId>
                 <artifactId>hippo-serviceGoven</artifactId>
@@ -73,10 +73,10 @@
     </dependencyManagement>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.github.hippo-band</groupId>-->
-            <!--<artifactId>hippo-zipkin</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>com.github.hippo-band</groupId>
+            <artifactId>hippo-zipkin</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.hippo-band</groupId>
             <artifactId>hippo-serviceGoven</artifactId>

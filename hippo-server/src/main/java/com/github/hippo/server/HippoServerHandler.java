@@ -25,6 +25,7 @@ import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,8 +48,8 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
         HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
         if (hippoRequestEnum != HippoRequestEnum.PING) {
-            zipkinStart(request);
             LOGGER.info("hippo start chainId:{},in param:{}", request.getChainId(), ToStringBuilder.reflectionToString(request));
+            zipkinStart(request);
         }
         try {
             ChainThreadLocal.INSTANCE.setChainId(request.getChainId());
@@ -119,8 +120,9 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
         tagMap.put("methodName", request.getMethodName());
         tagMap.put("requestType", HippoRequestEnum.getByType(request.getRequestType()).name());
         zipkinData.setTags(tagMap);
-        zipkinData.setParentSpanId(Long.parseLong(request.getRequestId(), 16));
-        zipkinData.setParentTraceId(Long.parseLong(request.getChainId(), 16));
+
+        zipkinData.setParentSpanId(new BigInteger(request.getRequestId(), 16).longValue());
+        zipkinData.setParentTraceId(new BigInteger(request.getChainId(), 16).longValue());
         return zipkinData;
     }
 
