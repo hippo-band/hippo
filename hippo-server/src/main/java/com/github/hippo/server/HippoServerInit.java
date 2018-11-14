@@ -104,7 +104,7 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
                 }
                 implObjectMap.put(name, serviceBean);
                 interfaceMap.put(simpleName, class1);
-                implClassMap.put(name, FastClass.create(serviceBean.getClass()));
+                implClassMap.put(name, FastClass.create(clazz));
                 if (annotation != null) {
                     registryNames.add(annotation.serviceName());
                 } else {

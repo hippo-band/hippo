@@ -162,9 +162,7 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
         Class<?>[] parameterTypes = _method.getParameterTypes();
 
         FastMethod serviceFastMethod = HippoServiceCache.INSTANCE.getImplClassMap().get(aClass.getName()).getMethod(_method.getName(), parameterTypes);
-
         String[] parameterNames = new LocalVariableTableParameterNameDiscoverer().getParameterNames(serviceFastMethod.getJavaMethod());
-
         Object[] objects = paras.getParameters();
         // 无参数
         if (parameterTypes.length == 0 || objects == null) {
