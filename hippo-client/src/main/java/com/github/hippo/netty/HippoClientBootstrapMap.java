@@ -55,7 +55,7 @@ public final class HippoClientBootstrapMap {
             return null;
         }
         //  round robin
-        Optional<HippoClientBootstrap> findFirst = map.values().stream().sorted().findFirst();
+        Optional<HippoClientBootstrap> findFirst = map.values().stream().sorted().findAny();
         if (findFirst.isPresent()) {
             HippoClientBootstrap hippoClientBootstrap = findFirst.get();
             hippoClientBootstrap.getInvokeTimes().incrementAndGet();
@@ -63,5 +63,13 @@ public final class HippoClientBootstrapMap {
         } else {
             return null;
         }
+    }
+
+    public static void refreshInvokeTimes(String serviceName) {
+        Map<String, HippoClientBootstrap> map = get(serviceName);
+        if (map == null || map.isEmpty()) {
+            return;
+        }
+        map.values().stream().forEach(HippoClientBootstrap::refreshInvokeTimes);
     }
 }

@@ -61,6 +61,9 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
     @Autowired(required = false)
     private ZipkinRecordService zipkinRecordService;
 
+    @Value("${hippo.zipkin.url:}")
+    private String zipkinUrl;
+
 
     @Override
     public void setApplicationContext(ApplicationContext ctx) {
@@ -130,8 +133,7 @@ public class HippoServerInit implements ApplicationContextAware, InitializingBea
             serviceName = registryNames.iterator().next();
         }
 
-        if (zipkinRecordService != null) {
-            HippoServiceCache.INSTANCE.getZipkinCache().setServiceName(serviceName);
+        if (zipkinRecordService != null && StringUtils.isNotBlank(zipkinUrl)) {
             HippoServiceCache.INSTANCE.getZipkinCache().setZipkinRecordService(zipkinRecordService);
         }
 

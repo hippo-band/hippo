@@ -9,13 +9,12 @@ import com.github.hippo.exception.HippoServiceException;
 import com.github.hippo.util.CommonUtils;
 import com.github.hippo.util.FastJsonConvertUtils;
 import com.github.hippo.zipkin.SpanKind;
-import com.github.hippo.zipkin.ZipkinData;
-import com.github.hippo.zipkin.ZipkinRecordService;
+import com.github.hippo.zipkin.ZipkinReq;
+import com.github.hippo.zipkin.ZipkinResp;
 import com.github.hippo.zipkin.ZipkinUtils;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,19 +40,28 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
 
     private void handle(ChannelHandlerContext ctx, HippoRequest request) {
         long start = System.currentTimeMillis();
-        HippoResponse response = new HippoResponse();
-        response.setChainId(request.getChainId());
-        response.setChainOrder(request.getChainOrder());
-        response.setServiceName(request.getServiceName());
-
         HippoRequestEnum hippoRequestEnum = HippoRequestEnum.getByType(request.getRequestType());
+        ZipkinResp zipkinResp = null;
         if (hippoRequestEnum != HippoRequestEnum.PING) {
             LOGGER.info("hippo start chainId:{},in param:{}", request.getChainId(), ToStringBuilder.reflectionToString(request));
-            zipkinStart(request);
+            zipkinResp = zipkinStart(request);
+            if (zipkinResp != null) {
+                request.setChainId(zipkinResp.getParentTraceId());
+                request.setSpanId(zipkinResp.getParentSpanId());
+                ChainThreadLocal.INSTANCE.setSpanId(request.getSpanId());
+            } else {
+                ChainThreadLocal.INSTANCE.clearSpanId();
+            }
         }
+        HippoResponse response = new HippoResponse();
         try {
+            response.setChainId(request.getChainId());
+            response.setChainOrder(request.getChainOrder());
+            response.setServiceName(request.getServiceName());
+
             ChainThreadLocal.INSTANCE.setChainId(request.getChainId());
             ChainThreadLocal.INSTANCE.incChainOrder(request.getChainOrder());
+
             response.setRequestId(request.getRequestId());
             if (hippoRequestEnum == null) {
                 response.setError(true);
@@ -69,61 +77,58 @@ class HippoServerHandler extends SimpleChannelInboundHandler<HippoRequest> {
                 response.setRequestId("-99");
             }
         } catch (Exception e1) {
-            LOGGER.error("handle error:" + request, e1);
             if (e1 instanceof InvocationTargetException) {
                 response.setThrowable(e1.getCause());
+                LOGGER.error("handle error:" + ToStringBuilder.reflectionToString(request), e1.getCause());
             } else {
                 response.setThrowable(e1);
+                LOGGER.error("handle error:" + ToStringBuilder.reflectionToString(request), e1);
             }
-            response.setRequestId(request.getRequestId());
-            response.setResult(request);
             response.setError(true);
         }
-        ChainThreadLocal.INSTANCE.clearTL();
         if (hippoRequestEnum != HippoRequestEnum.PING) {
-            zipkinFinish(response);
+            zipkinFinish(zipkinResp, response);
             LOGGER.info("hippo end chainId:{} out result:{},耗时:{}毫秒", request.getChainId(), response, System.currentTimeMillis() - start);
         }
+        ChainThreadLocal.INSTANCE.clearTL();
 
         ctx.writeAndFlush(response);
     }
 
-    private void zipkinFinish(HippoResponse response) {
+    private void zipkinFinish(ZipkinResp zipkinResp, HippoResponse response) {
         ZipkinCache zipkinCache = HippoServiceCache.INSTANCE.getZipkinCache();
-        if (StringUtils.isNotBlank(zipkinCache.getServiceName()) && zipkinCache.getZipkinRecordService() != null) {
-            ZipkinRecordService zipkinRecordService = zipkinCache.getZipkinRecordService();
+        if (zipkinResp != null && zipkinCache.getZipkinRecordService() != null) {
             if (response.isError()) {
-                ZipkinUtils.zipkinRecordError(zipkinRecordService, response.getThrowable());
+                ZipkinUtils.zipkinRecordError(zipkinResp, zipkinCache.getZipkinRecordService(), response.getThrowable());
             }
-            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+            ZipkinUtils.zipkinRecordFinish(zipkinResp, zipkinCache.getZipkinRecordService());
         }
     }
 
-    private void zipkinStart(HippoRequest request) {
+    private ZipkinResp zipkinStart(HippoRequest request) {
         ZipkinCache zipkinCache = HippoServiceCache.INSTANCE.getZipkinCache();
-        if (StringUtils.isNotBlank(zipkinCache.getServiceName()) && zipkinCache.getZipkinRecordService() != null) {
-            String currentServiceName = zipkinCache.getServiceName();
-            ZipkinRecordService zipkinRecordService = zipkinCache.getZipkinRecordService();
-            ZipkinData zipkinData = fillZipkinData(request, currentServiceName);
-            ZipkinUtils.zipkinRecordStart(zipkinData, zipkinRecordService);
+        if (zipkinCache.getZipkinRecordService() != null) {
+            ZipkinReq zipkinReq = fillZipkinData(request);
+            return ZipkinUtils.zipkinRecordStart(zipkinReq, zipkinCache.getZipkinRecordService());
         }
+        return null;
     }
 
-    private ZipkinData fillZipkinData(HippoRequest request, String currentServiceName) {
-        ZipkinData zipkinData = new ZipkinData();
-        zipkinData.setServiceName(currentServiceName);
-        zipkinData.setMethodName(request.getMethodName());
-        zipkinData.setSpanKind(SpanKind.SERVER);
-        zipkinData.setAnnotate(ToStringBuilder.reflectionToString(request.getParameters()));
+    private ZipkinReq fillZipkinData(HippoRequest request) {
+        ZipkinReq zipkinReq = new ZipkinReq();
+        zipkinReq.setServiceName(request.getServiceName());
+        zipkinReq.setMethodName(request.getMethodName());
+        zipkinReq.setSpanKind(SpanKind.SERVER);
+        zipkinReq.setAnnotate(request.getMethodName());
         Map<String, String> tagMap = new HashMap<>();
         tagMap.put("className", request.getClassName());
         tagMap.put("methodName", request.getMethodName());
         tagMap.put("requestType", HippoRequestEnum.getByType(request.getRequestType()).name());
-        zipkinData.setTags(tagMap);
+        zipkinReq.setTags(tagMap);
 
-        zipkinData.setParentSpanId(new BigInteger(request.getRequestId(), 16).longValue());
-        zipkinData.setParentTraceId(new BigInteger(request.getChainId(), 16).longValue());
-        return zipkinData;
+        zipkinReq.setParentSpanId(new BigInteger(request.getSpanId(), 16).longValue());
+        zipkinReq.setParentTraceId(new BigInteger(request.getChainId(), 16).longValue());
+        return zipkinReq;
     }
 
     private Object rpcProcess(HippoRequest paras) throws InvocationTargetException {

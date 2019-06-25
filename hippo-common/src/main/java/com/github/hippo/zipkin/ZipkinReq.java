@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * zipkin data
  */
-public class ZipkinData {
+public class ZipkinReq {
     private SpanKind spanKind;
     private String annotate;
     private String methodName;
@@ -20,6 +20,14 @@ public class ZipkinData {
     private Long parentTraceId;
 
     private Map<String, String> tags;
+
+    public SpanKind getSpanKind() {
+        return spanKind;
+    }
+
+    public void setSpanKind(SpanKind spanKind) {
+        this.spanKind = spanKind;
+    }
 
     public Map<String, String> getTags() {
         return tags;
@@ -59,14 +67,6 @@ public class ZipkinData {
 
     public void setMethodName(String methodName) {
         this.methodName = methodName;
-    }
-
-    public SpanKind getSpanKind() {
-        return spanKind;
-    }
-
-    public void setSpanKind(SpanKind spanKind) {
-        this.spanKind = spanKind;
     }
 
     public String getServiceName() {

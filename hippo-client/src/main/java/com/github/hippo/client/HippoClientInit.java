@@ -81,7 +81,7 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
                             } else if (annotation != null) {
                                 serviceNames.add(annotation.serviceName());
                             } else {
-                                classNames.add(objClz.getName());
+                                classNames.add(key);
                             }
 
                             field.setAccessible(true);
@@ -111,61 +111,67 @@ public class HippoClientInit implements ApplicationContextAware, InitializingBea
 
     @Override
     public void afterPropertiesSet() {
-        for (String className : classNames) {
-            String serviceNameByClassName = serviceGovern.getServiceNameByClassName(className);
-            if (serviceNameByClassName == null) {
-                LOGGER.warn("className[" + className + "] can not find serviceName");
-            } else {
-                serviceNames.add(serviceNameByClassName);
-                HippoClientCache.INSTANCE.getClassNameServiceNameMap().put(className, serviceNameByClassName);
-            }
-        }
-        classNames.clear();
         ScheduledExecutorService newScheduledThreadPool = Executors.newScheduledThreadPool(1);
         newScheduledThreadPool.scheduleAtFixedRate(() -> {
-            if (CollectionUtils.isEmpty(serviceNames)) {
-                return;
-            }
-            serviceNames.forEach(this::conntectionProcess);
+            conntectionProcess();
         }, 120, 25, TimeUnit.SECONDS);
     }
 
 
-    private void conntectionProcess(String serviceName) {
-        List<String> serviceAddresses;
-        try {
-            serviceAddresses = serviceGovern.getServiceAddresses(serviceName);
-        } catch (Exception e) {
-            LOGGER.error("getServiceAddresses error:[" + serviceName + "],每10秒会重试", e);
-            return;
-        }
-        if (CollectionUtils.isEmpty(serviceAddresses)) {
-            return;
-        }
+    private void conntectionProcess() {
 
-        Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
-        if (map != null && !map.isEmpty()) {
-            Iterator<HippoClientBootstrap> iterator = map.values().iterator();
-            while (iterator.hasNext()) {
-                HippoClientBootstrap next = iterator.next();
-                String key = next.getHost() + ":" + next.getPort();
-                if (!serviceAddresses.contains(key)) {
-                    map.remove(key).shutdown();
+        if (CollectionUtils.isEmpty(serviceNames) && CollectionUtils.isEmpty(classNames)) {
+            return;
+        }
+        if (!CollectionUtils.isEmpty(classNames)) {
+            for (String className : classNames) {
+                String serviceNameByClassName = serviceGovern.getServiceNameByClassName(className);
+                if (StringUtils.isBlank(serviceNameByClassName)) {
+                    LOGGER.warn("className[" + className + "] can not find serviceName");
+                } else {
+                    serviceNames.add(serviceNameByClassName);
+                    HippoClientCache.INSTANCE.getClassNameServiceNameMap().put(className, serviceNameByClassName);
                 }
             }
+            classNames.clear();
         }
 
-        for (String serviceAddress : serviceAddresses) {
-            String[] split = serviceAddress.split(":");
-            String host = split[0];
-            int port = Integer.parseInt(split[1]);
-            if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
-                LOGGER.warn("[%s]服务参数异常.host=%s,port=%s", serviceName, host, port);
-                continue;
+        serviceNames.stream().forEach(serviceName -> {
+
+            List<String> serviceAddresses;
+            try {
+                serviceAddresses = serviceGovern.getServiceAddresses(serviceName);
+            } catch (Exception e) {
+                LOGGER.error("getServiceAddresses error:[" + serviceName + "],每10秒会重试", e);
+                return;
             }
-            createHippoHandler(serviceName, host, port);
+            if (CollectionUtils.isEmpty(serviceAddresses)) {
+                return;
+            }
 
-        }
+            Map<String, HippoClientBootstrap> map = HippoClientBootstrapMap.get(serviceName);
+            if (map != null && !map.isEmpty()) {
+                Iterator<HippoClientBootstrap> iterator = map.values().iterator();
+                while (iterator.hasNext()) {
+                    HippoClientBootstrap next = iterator.next();
+                    String key = next.getHost() + ":" + next.getPort();
+                    if (!serviceAddresses.contains(key)) {
+                        map.remove(key).shutdown();
+                    }
+                }
+            }
+
+            for (String serviceAddress : serviceAddresses) {
+                String[] split = serviceAddress.split(":");
+                String host = split[0];
+                int port = Integer.parseInt(split[1]);
+                if (StringUtils.isBlank(host) || port <= 0 || port > 65532) {
+                    LOGGER.warn("[%s]服务参数异常.host=%s,port=%s", serviceName, host, port);
+                    continue;
+                }
+                createHippoHandler(serviceName, host, port);
+            }
+        });
     }
 
     static void createHippoHandler(String serviceName, String host, int port) {

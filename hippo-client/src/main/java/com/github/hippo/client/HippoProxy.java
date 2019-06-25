@@ -13,12 +13,12 @@ import com.github.hippo.hystrix.HippoCommand;
 import com.github.hippo.netty.HippoClientBootstrapMap;
 import com.github.hippo.zipkin.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Proxy;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -40,14 +40,14 @@ public class HippoProxy {
     @Autowired(required = false)
     private ZipkinRecordService zipkinRecordService;
 
+    @Value("${hippo.zipkin.url:}")
+    private String zipkinUrl;
+
     @SuppressWarnings("unchecked")
     <T> T create(Class<?> inferfaceClass, HippoClient hippoClient) {
         return (T) Proxy.newProxyInstance(inferfaceClass.getClassLoader(),
                 new Class<?>[]{inferfaceClass}, (proxy, method, args) -> {
                     HippoRequest request = new HippoRequest();
-                    request.setRequestId(UUID.randomUUID().toString());
-                    request.setChainId(ChainThreadLocal.INSTANCE.getChainId());
-                    request.setChainOrder(ChainThreadLocal.INSTANCE.getChainOrder());
                     request.setRequestType(HippoRequestEnum.RPC.getType());
                     request.setClassName(method.getDeclaringClass().getName());
                     request.setMethodName(method.getName());
@@ -71,7 +71,7 @@ public class HippoProxy {
                     }
                     return commonInvoke(request, hippoClient.timeout(), hippoClient.retryTimes(),
                             hippoClient.isCircuitBreaker(), hippoClient.semaphoreMaxConcurrentRequests(),
-                            hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled(), hippoClient.isUseHystrix(), currentServiceName);
+                            hippoClient.downgradeStrategy(), hippoClient.fallbackEnabled(), hippoClient.isUseHystrix(), serviceName);
                 });
     }
 
@@ -108,9 +108,6 @@ public class HippoProxy {
         Object[] objects = new Object[1];
         objects[0] = parameter;
         HippoRequest request = new HippoRequest();
-        request.setRequestId(UUID.randomUUID().toString());
-        request.setChainId(ChainThreadLocal.INSTANCE.getChainId());
-        request.setChainOrder(ChainThreadLocal.INSTANCE.getChainOrder());
         request.setRequestType(HippoRequestEnum.API.getType());
         request.setClassName(serviceMethods[0]);
         request.setMethodName(serviceMethods[1]);
@@ -128,14 +125,20 @@ public class HippoProxy {
     }
 
     private Object commonInvoke(HippoRequest request, int timeout, int retryTimes, boolean isCircuitBreaker, int semaphoreMaxConcurrentRequests, Class<?> hippoFailPolicy, boolean fallbackEnable, boolean isUseHystrix, String currentServiceName) throws Throwable {
-        ZipkinData zipkinData = null;
-        if (zipkinRecordService != null) {
-            zipkinData = fillZipkinData(request, currentServiceName);
+        ZipkinReq zipkinReq = null;
+        request.setChainOrder(ChainThreadLocal.INSTANCE.getChainOrder());
+        request.setChainId(ChainThreadLocal.INSTANCE.getChainId());
+        request.setRequestId(UUID.randomUUID().toString());
+        if (zipkinRecordService != null && StringUtils.isNotBlank(zipkinUrl)) {
+            request.setSpanId(ChainThreadLocal.INSTANCE.getSpanId());
+            zipkinReq = fillZipkinData(request, currentServiceName);
         }
-        ZipkinResp zipkinResp = ZipkinUtils.zipkinRecordStart(zipkinData, zipkinRecordService);
+        ZipkinResp zipkinResp = ZipkinUtils.zipkinRecordStart(zipkinReq, zipkinRecordService);
         if (zipkinResp != null) {
             request.setChainId(zipkinResp.getParentTraceId());
-            request.setRequestId(zipkinResp.getParentSpanId());
+            request.setSpanId(zipkinResp.getParentSpanId());
+        } else {
+            request.setChainId(ChainThreadLocal.INSTANCE.getChainId());
         }
         ChainThreadLocal.INSTANCE.clearTL();
         HippoCommand hippoCommand =
@@ -157,53 +160,48 @@ public class HippoProxy {
 
             }
         } catch (Exception e) {
-            ZipkinUtils.zipkinRecordError(zipkinRecordService, e);
-            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+            ZipkinUtils.zipkinRecordFinish(zipkinResp, zipkinRecordService, e);
             throw e;
         }
         if (hippoResponse.isError()) {
-            ZipkinUtils.zipkinRecordError(zipkinRecordService, hippoResponse.getThrowable());
-            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+            ZipkinUtils.zipkinRecordFinish(zipkinResp, zipkinRecordService, hippoResponse.getThrowable());
             throw hippoResponse.getThrowable();
         } else {
-            ZipkinUtils.zipkinRecordFinish(zipkinRecordService);
+            ZipkinUtils.zipkinRecordFinish(zipkinResp, zipkinRecordService);
             return hippoResponse.getResult();
         }
     }
 
-    private ZipkinData fillZipkinData(HippoRequest request, String currentServiceName) {
-        ZipkinData zipkinData = new ZipkinData();
+    private ZipkinReq fillZipkinData(HippoRequest request, String currentServiceName) {
+        ZipkinReq zipkinReq = new ZipkinReq();
 
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         String className;
         String methodName;
         if (request.getRequestType() == HippoRequestEnum.API.getType()) {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             className = stackTrace[5].getClassName();
             methodName = stackTrace[5].getMethodName();
         } else {
-            className = stackTrace[4].getClassName();
-            methodName = stackTrace[4].getMethodName();
+            className = request.getClassName();
+            methodName = request.getMethodName();
         }
-        zipkinData.setServiceName(StringUtils.isBlank(currentServiceName) ? className + ":" + methodName : currentServiceName);
-        zipkinData.setMethodName(methodName);
-        zipkinData.setSpanKind(SpanKind.CLIENT);
-        zipkinData.setAnnotate(ToStringBuilder.reflectionToString(request.getParameters()));
+        zipkinReq.setServiceName(StringUtils.isBlank(currentServiceName) ? className + ":" + methodName : currentServiceName);
+        zipkinReq.setMethodName(methodName);
+        zipkinReq.setAnnotate(methodName);
+        zipkinReq.setSpanKind(SpanKind.CLIENT);
         Map<String, String> tagMap = new HashMap<>();
         tagMap.put("className", className);
         tagMap.put("methodName", methodName);
         tagMap.put("callType", request.getCallType().name());
-        tagMap.put("nextServiceName", request.getServiceName());
-        tagMap.put("nextClassName", request.getClassName());
-        tagMap.put("nextMethodName", request.getMethodName());
         if (StringUtils.isBlank(currentServiceName)) {
             tagMap.put("tips", "可在配置文件里配置service.name代替类名+方法名");
         }
-        zipkinData.setTags(tagMap);
+        zipkinReq.setTags(tagMap);
         if (request.getChainOrder() != 1) {
-            zipkinData.setParentSpanId(Long.parseLong(request.getRequestId(), 16));
-            zipkinData.setParentTraceId(Long.parseLong(request.getChainId(), 16));
+            zipkinReq.setParentSpanId(new BigInteger(request.getSpanId(), 16).longValue());
+            zipkinReq.setParentTraceId(new BigInteger(request.getChainId(), 16).longValue());
         }
-        return zipkinData;
+        return zipkinReq;
     }
 
     public Object apiRequest(String serviceName, String serviceMethod, Object parameter)

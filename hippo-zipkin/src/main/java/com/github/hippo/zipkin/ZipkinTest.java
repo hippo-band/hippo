@@ -18,7 +18,6 @@ public class ZipkinTest {
         AsyncReporter reporter = AsyncReporter.builder(sender)
                 .closeTimeout(100, TimeUnit.MILLISECONDS)
                 .build(SpanBytesEncoder.JSON_V2);
-        new ZipkinTest().asd();
         Tracing tracing = Tracing.newBuilder()
                 .localServiceName("test1")
                 .spanReporter(reporter)
@@ -26,14 +25,17 @@ public class ZipkinTest {
                 .currentTraceContext(ThreadLocalCurrentTraceContext.create())
                 .build();
         Tracer tracer = tracing.tracer();
+        tracer.startScopedSpan("t1");
         Span span = tracer.newTrace().annotate("111").start();
+        span.kind(Span.Kind.CLIENT);
+       // span1.finish();
         // System.out.println(  span.context().traceId());
         //System.out.println(  span.context().spanId());
         //tracer.nextSpan().start();
-        span.tag("tttt1", "1111");
-        span.tag("tttt2", "1111");
-        span.tag("tttt3", "1111");
-//        Span span = tracer.newChild(TraceContext.newBuilder().parentId(-3644591365253961277L).traceId(-3644591365253961277L).spanId(8055838165201322580L).build()).name("eeeee").start();
+
+       // Span span2=tracer.newChild(TraceContext.newBuilder().parentId(span.context().spanId()).traceId(span.context().traceId()).spanId(span.context().spanId()).build()).name("eeeee").annotate("222").start();
+        // Span span2 = tracer.newChild(TraceContext.newBuilder().parentId(span.context().spanId()).traceId(span.context().traceId()).spanId(span.context().spanId()).build()).name("eeeee").start();
+       // span2.kind(Span.Kind.SERVER);
 //         System.out.println(  span.context().traceId());
 //        System.out.println(  span.context().spanId());
         //System.out.println(span.annotate("").kind(Span.Kind.CLIENT));
@@ -43,14 +45,11 @@ public class ZipkinTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
+            //span1.finish();
             span.finish();
             //    action_1.finish();
         }
         Thread.sleep(100000000L);
     }
 
-    private  void asd() {
-        System.out.println(this.getClass().getCanonicalName() + "."
-                + Thread.currentThread().getStackTrace()[1].getMethodName());
-    }
 }

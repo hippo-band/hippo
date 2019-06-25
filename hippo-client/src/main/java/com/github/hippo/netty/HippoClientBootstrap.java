@@ -59,6 +59,8 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
         } catch (Exception e) {
             throw new HippoServiceUnavailableException(
                     "[" + this.serviceName + "]服务不可用,初始化失败.host:" + host + ",port:" + port, e);
+        } finally {
+            HippoClientBootstrapMap.refreshInvokeTimes(serviceName);
         }
     }
 
@@ -66,18 +68,18 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
     public HippoResultCallBack sendAsync(HippoRequest request, int timeout) {
         HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
         this.handler.sendAsync(hippoResultCallBack);
-        this.invokeTimes.decrementAndGet();
+        //this.invokeTimes.decrementAndGet();
         return hippoResultCallBack;
     }
 
     public HippoResponse sendWithCallBack(HippoRequest request, int timeout) {
         HippoResultCallBack hippoResultCallBack = new HippoResultCallBack(request, timeout);
-        this.invokeTimes.decrementAndGet();
+        //this.invokeTimes.decrementAndGet();
         return this.handler.sendWithCallBack(hippoResultCallBack);
     }
 
     public HippoResponse sendOneWay(HippoRequest hippoRequest) {
-        this.invokeTimes.decrementAndGet();
+        //this.invokeTimes.decrementAndGet();
         return this.handler.sendOneWay(hippoRequest);
     }
 
@@ -91,6 +93,13 @@ public class HippoClientBootstrap implements Comparable<HippoClientBootstrap> {
 
     public AtomicLong getInvokeTimes() {
         return invokeTimes;
+    }
+
+    /**
+     * 重置invokeTimes
+     */
+    public void refreshInvokeTimes() {
+        invokeTimes.set(0);
     }
 
     @Override

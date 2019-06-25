@@ -6,12 +6,12 @@ package com.github.hippo.zipkin;
 public interface ZipkinRecordService {
 
 
-    ZipkinResp start(ZipkinData zipkinData);
+    ZipkinResp start(ZipkinReq zipkinReq);
 
-    void finish();
+    void finish(ZipkinResp zipkinResp);
 
-    void error(Throwable throwable);
+    void error(ZipkinResp zipkinResp, Throwable throwable);
 
-    void finish(Throwable throwable);
+    void finish(ZipkinResp zipkinResp, Throwable throwable);
 
 }

@@ -8,6 +8,26 @@ public class ZipkinResp implements Serializable {
 
     private String parentTraceId;
 
+    private Object span;
+
+    private Object tracing;
+
+    public Object getSpan() {
+        return span;
+    }
+
+    public void setSpan(Object span) {
+        this.span = span;
+    }
+
+    public Object getTracing() {
+        return tracing;
+    }
+
+    public void setTracing(Object tracing) {
+        this.tracing = tracing;
+    }
+
     public String getParentSpanId() {
         return parentSpanId;
     }

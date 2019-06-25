@@ -141,8 +141,9 @@ public class ServiceGovenImpl implements ServiceGovern {
             eureClientConfigBean.setAvailabilityZones(zones);
             eureClientConfigBean.setServiceUrl(serviceUrls);
 
-            return new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
+            discoveryClient = new DiscoveryClient(initializeApplicationInfoManager(eureInstanceConfigBean),
                     eureClientConfigBean);
+            return discoveryClient;
         }
     }
 
